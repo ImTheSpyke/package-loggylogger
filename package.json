@@ -1,0 +1,45 @@
+{
+  "name": "@imthespyke/loggylogger",
+  "author": "ImTheSpyke",
+  "private": false,
+  "version": "1.0.4",
+  "description": "Fully customizable Logger module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "pub": "npm publish --access public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ImTheSpyke/package-loggylogger.git"
+  },
+  "keywords": [
+    "loggy",
+    "logger",
+    "loggylogger",
+    "imthespyke",
+    "spyke"
+  ],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ImTheSpyke/package-loggylogger/issues"
+  },
+  "homepage": "https://github.com/ImTheSpyke/package-loggylogger#readme",
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  }
+}
