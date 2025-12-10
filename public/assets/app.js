@@ -21,6 +21,7 @@ class LoggyLoggerApp {
         this._currentDetailLog = null;
         this._filterDebounceTimer = null;
         this._statsInterval = null;
+        this._checksStatsMode = 'interval'; // 'disabled', 'interval', 'live'
 
         this.LOG_LEVELS = ['silly', 'verbose', 'debug', 'log', 'info', 'success', 'warn', 'error', 'fatal'];
         this.BUFFER_PRESETS = [100, 500, 1000, 5000, 10000, 50000];
@@ -204,6 +205,12 @@ class LoggyLoggerApp {
             this._fullRender();
         });
 
+        // Checks stats mode
+        DOM.on('checksStatsMode', 'change', (e) => {
+            this._checksStatsMode = e.target.value;
+            this._renderChecksContainer();
+        });
+
         // Escape key handler
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
@@ -355,6 +362,9 @@ class LoggyLoggerApp {
         if (emptyState) emptyState.remove();
 
         // Check if log should be displayed
+        // Track checks execution time for this specific log
+        let checksTime = 0;
+
         if (this._shouldShowLog(log)) {
             if (this._recording.isRecording) {
                 this._recording.recordDatas.push(logData);
@@ -363,6 +373,12 @@ class LoggyLoggerApp {
             const wasAtBottom = this._isAtBottom();
             const enabledChecks = ChecksManager.getEnabled();
             const entry = LogRenderer.createLogEntry(log, true, enabledChecks);
+
+            // Calculate total checks execution time for this log from cached results
+            enabledChecks.forEach(check => {
+                const cached = ChecksManager.runCheck(check, log);
+                checksTime += cached.time;
+            });
 
             entry.addEventListener('click', () => this._openLogDetail(log));
 
@@ -385,10 +401,12 @@ class LoggyLoggerApp {
         DOM.setText('totalCount', this._logs.length);
         this._updateScrollIndicator();
 
-        // Track checks execution time
-        const checksStart = performance.now();
         this._updateChecksResultsHeader();
-        const checksTime = performance.now() - checksStart;
+
+        // Live stats update
+        if (this._checksStatsMode === 'live') {
+            this._updateChecksStatsUI();
+        }
 
         // Track performance
         const renderTime = performance.now() - startTime;
@@ -771,14 +789,17 @@ class LoggyLoggerApp {
             const item = DOM.create('div', { className: 'check-item' });
             item.dataset.checkId = check.id;
 
-            // Build timing display string
+            // Build timing display string based on stats mode
             let avgTimingHtml = '';
             let lastTimingHtml = '';
-            if (stats.sampleCount > 0) {
-                const timeSpanStr = stats.timeSpanSeconds > 0 ? `/${stats.timeSpanSeconds}s` : '';
-                avgTimingHtml = `avg: ${stats.avg.toFixed(2)}ms (${stats.sampleCount}${timeSpanStr})`;
-                if (stats.last > 0) {
-                    lastTimingHtml = `last: ${stats.last.toFixed(2)}ms`;
+            if (this._checksStatsMode !== 'disabled') {
+                if (stats.sampleCount > 0) {
+                    const timeSpanStr = stats.timeSpanSeconds > 0 ? `/${stats.timeSpanSeconds}s` : '';
+                    avgTimingHtml = `avg: ${stats.avg.toFixed(2)}ms (${stats.sampleCount}${timeSpanStr})`;
+                    lastTimingHtml = stats.last > 0 ? `last: ${stats.last.toFixed(2)}ms` : 'last: N/A';
+                } else {
+                    avgTimingHtml = 'avg: N/A';
+                    lastTimingHtml = 'last: N/A';
                 }
             }
 
@@ -818,6 +839,15 @@ class LoggyLoggerApp {
     }
 
     _updateChecksTimingDisplay() {
+        // Only update on interval mode
+        if (this._checksStatsMode !== 'interval') return;
+
+        this._updateChecksStatsUI();
+    }
+
+    _updateChecksStatsUI() {
+        if (this._checksStatsMode === 'disabled') return;
+
         const checks = ChecksManager.getAll();
 
         checks.forEach(check => {
@@ -826,22 +856,15 @@ class LoggyLoggerApp {
 
             if (!avgSpan || !lastSpan) return;
 
-            // If check is disabled, clear the "last" display but keep avg
-            if (!check.enabled) {
-                lastSpan.textContent = '';
-                return;
-            }
-
             const stats = ChecksManager.getExecutionTimeStats(check.id);
 
             if (stats.sampleCount > 0) {
                 const timeSpanStr = stats.timeSpanSeconds > 0 ? `/${stats.timeSpanSeconds}s` : '';
                 avgSpan.textContent = `avg: ${stats.avg.toFixed(2)}ms (${stats.sampleCount}${timeSpanStr})`;
-
-                // Only update "last" if there's a new value (last > 0 means we have data)
-                if (stats.last > 0) {
-                    lastSpan.textContent = `last: ${stats.last.toFixed(2)}ms`;
-                }
+                lastSpan.textContent = stats.last > 0 ? `last: ${stats.last.toFixed(2)}ms` : 'last: N/A';
+            } else {
+                avgSpan.textContent = 'avg: N/A';
+                lastSpan.textContent = 'last: N/A';
             }
         });
     }
