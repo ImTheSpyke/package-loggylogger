@@ -1509,7 +1509,7 @@ return true;"></textarea>
 
         const LOG_LEVELS = ['silly', 'verbose', 'debug', 'log', 'info', 'success', 'warn', 'error', 'fatal'];
         const BUFFER_PRESETS = [100, 500, 1000, 5000, 10000, 50000];
-        const MAX_RECONNECT_DELAY = 30000;
+        const MAX_RECONNECT_DELAY = 15000;
         const BASE_RECONNECT_DELAY = 1000;
         const MAX_CHECKS = 100;
 
@@ -1600,7 +1600,7 @@ return true;"></textarea>
         }
 
         function getReconnectDelay() {
-            return Math.min(BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttempts), MAX_RECONNECT_DELAY);
+            return Math.min(BASE_RECONNECT_DELAY * Math.pow(1.5, reconnectAttempts), MAX_RECONNECT_DELAY);
         }
 
         function scheduleReconnect() {
@@ -2588,7 +2588,6 @@ return true;"></textarea>
             // Track render time for performance monitoring
             renderLag = performance.now() - startTime;
 
-            console.log(`Render time: ${renderLag.toFixed(2)}ms, checks execution time: ${checksExecutionTime.toFixed(2)}ms`);
             if(checksExecutionTime > 1000) {
                 disconnect()
                 console.error(`Checks execution time took too long: ${renderLag}ms. Websocket has been disconnected.`)
@@ -2630,7 +2629,6 @@ return true;"></textarea>
                         if(msBehind < 500) {
                             togglePerformanceWarning('ping', false);
                         }
-                        console.log("seconds behind: ", msBehind / 1000, msBehind)
                     }
                     if ([
                         'log-silly',
@@ -2672,6 +2670,8 @@ return true;"></textarea>
 
             setInterval(() => {
                 // send ping packet
+                if(!ws) return
+                if(ws.readyState !== WebSocket.OPEN) return
                 ws.send(JSON.stringify({
                     type: 'ping',
                     timestamp: new Date().toISOString()
