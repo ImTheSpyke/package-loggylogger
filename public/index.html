@@ -1283,7 +1283,7 @@ return true;"></textarea>
 
             <div class="performance-warning" id="performanceWarning">
                 <span class="warning-icon">⚠️</span>
-                <span class="warning-text">Page can't keep up with incoming logs. Consider disabling checks or some filters.</span>
+                <span class="warning-text">Page can't keep up with incoming logs. Consider disabling checks or some filters. Running <span class="warning-amount" id="performanceWarningAmount"></span> ms behind. (Last ping <span class="warning-amount" id="performanceWarningPing"></span> s ago)</span>
             </div>
 
             <div class="logs-container" id="logsContainer">
@@ -1416,7 +1416,7 @@ return true;"></textarea>
         let enabledLogLevels = new Set(['info', 'success', 'warn', 'error', 'fatal']);
 
         // Checks system
-        let checks = []; // { id, name, code, enabled }
+        let checks = []; // { id: string, name: string, code: string, enabled: boolean, fn: function }
         let checkIdCounter = 0;
         let editingCheckId = null;
         let checksFilter = new Set(); // Set of check IDs that must pass
@@ -1439,7 +1439,7 @@ return true;"></textarea>
         let lastRenderTime = 0;
         let renderLag = 0;
         let performanceWarningShown = false;
-        let checkPerformanceLastCheck = 0
+        let checkPerformanceLastCheck = Date.now()
 
         // Recording
         const Recording = {
@@ -1512,6 +1512,8 @@ return true;"></textarea>
         const logsPerSecondDisplayed = document.getElementById('logsPerSecondDisplayed');
         const logsPerMinuteDisplayed = document.getElementById('logsPerMinuteDisplayed');
         const performanceWarning = document.getElementById('performanceWarning');
+        const performanceWarningAmount = document.getElementById('performanceWarningAmount');
+        const performanceWarningPing = document.getElementById('performanceWarningPing');
 
         function showToast(message) {
             toast.textContent = message;
@@ -1940,8 +1942,8 @@ return true;"></textarea>
         // Checks system
         function runCheck(check, log) {
             try {
-                const fn = new Function('date', 'type', 'callLine', 'argList', 'boundDatas', check.code);
-                const date = log.date ? new Date(log.date) : new Date();
+                const fn = check.fn;
+                const date = log.date ? new Date(log.date) : new Date(0);
                 const boundDatas = log.boundDatas || {};
                 return !!fn(date, log.type, log.callLine, log.argList, boundDatas);
             } catch (e) {
@@ -2092,6 +2094,11 @@ return true;"></textarea>
                 if (check) {
                     check.name = name;
                     check.code = code;
+                    // recompile function
+                    check.fn = new Function(
+                        'date', 'type', 'callLine', 'argList', 'boundDatas', 
+                        code
+                    );
                 }
             } else {
                 if (checks.length >= MAX_CHECKS) {
@@ -2102,7 +2109,11 @@ return true;"></textarea>
                     id: ++checkIdCounter,
                     name,
                     code,
-                    enabled: true
+                    enabled: true,
+                    fn: new Function(
+                        'date', 'type', 'callLine', 'argList', 'boundDatas', 
+                        code
+                    )
                 });
             }
 
@@ -2451,6 +2462,7 @@ return true;"></textarea>
                 ...logData,
                 isNew: true
             };
+            log.type = logData.type.slice(4)
 
             logs.push(log);
 
@@ -2522,8 +2534,20 @@ return true;"></textarea>
             ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    if(data.type == 'ping') {
-                        checkPerformance(new Date(data.timestamp), (new Date()));
+                    if(data.type == 'pong') {
+                        let roadtrip_delay = (new Date(data.timestamp)).getTime() - (new Date()).getTime()
+                        console.log("Roadtrip delay: ", roadtrip_delay,)
+                        let d = new Date()
+                        let d_timestamp = new Date(data.timestamp)
+                        performanceWarningPing.textContent = Math.round(d.getTime() - d_timestamp.getTime())/1000
+                        
+                        let msBehind = checkPerformance(d_timestamp, d);
+                        performanceWarningAmount.textContent = msBehind
+
+                        if(msBehind < 500) {
+                            togglePerformanceWarning(false);
+                        }
+                        console.log("seconds behind: ", msBehind / 1000, msBehind)
                     }
                     if ([
                         'log-silly',
@@ -2561,6 +2585,15 @@ return true;"></textarea>
                     scheduleReconnect();
                 }
             };
+
+
+            setInterval(() => {
+                // send ping packet
+                ws.send(JSON.stringify({
+                    type: 'ping',
+                    timestamp: new Date().toISOString()
+                }))
+            }, 1000)
         }
 
         function disconnect() {
@@ -2724,31 +2757,51 @@ return true;"></textarea>
             logsPerMinuteDisplayed.textContent = displayedPerMinute;
         }
 
-        // Performance monitoring
-        function checkPerformance(logReceivedAt, logDisplayedAt) {
-            // if last check less than 1s ago, skip
-            if (Date.now() - checkPerformanceLastCheck < 1000) {
-                return;
-            }
-            checkPerformanceLastCheck = Date.now();
 
-            // Check if we're falling behind (more than 50% lag or render time > 100ms)
-            const isFallingBehind = ((logDisplayedAt - logReceivedAt) > 500)
-
-            console.log("Seconds behind:", (logDisplayedAt - logReceivedAt) / 1000);
-
-            if (isFallingBehind && !performanceWarningShown) {
+        function togglePerformanceWarning(toggleTo) {
+            if (toggleTo) {
                 performanceWarning.classList.add('visible');
                 performanceWarningShown = true;
-            } else if (!isFallingBehind && performanceWarningShown) {
+            } else {
                 performanceWarning.classList.remove('visible');
                 performanceWarningShown = false;
             }
         }
 
+        // Performance monitoring
+        function checkPerformance(logReceivedAt, logDisplayedAt) {
+            // if last check less than 1s ago, skip
+            checkPerformanceLastCheck = Date.now();
+
+            // Check if we're falling behind (more than 50% lag or render time > 100ms)
+            const msBehind = (logDisplayedAt - logReceivedAt);
+            const isFallingBehind = msBehind > 500
+
+            if (isFallingBehind && !performanceWarningShown) {
+                togglePerformanceWarning(true);
+            }
+
+            return msBehind
+        }
+
+        function getCheckPerformanceLastPingTimingSince() {
+            let value = Date.now() - checkPerformanceLastCheck
+            if (value < 1250) {
+                return value
+            }
+            return value
+        }
+
         // Start statistics update interval
         statsUpdateInterval = setInterval(() => {
             updateStatistics();
+
+            //
+            let lastPerfCheck = getCheckPerformanceLastPingTimingSince()
+            if(lastPerfCheck > 1250) {
+                console.log(`last check performance ping was too long (${lastPerfCheck} ms)`)
+                togglePerformanceWarning(true);
+            }
         }, 1000);
 
         window.addEventListener('load', () => {
