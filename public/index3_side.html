@@ -1,0 +1,2294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoggyLogger - Live Logs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-layout {
+            display: flex;
+            height: 100vh;
+        }
+
+        .logs-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            padding: 10px;
+        }
+
+        .settings-panel {
+            width: 320px;
+            min-width: 320px;
+            background: #252526;
+            border-left: 1px solid #3c3c3c;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .settings-section {
+            background: #2d2d30;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .settings-section h3 {
+            color: #4ec9b0;
+            font-size: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header {
+            background: #2d2d30;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #4ec9b0;
+            font-size: 18px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #f44336;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #4caf50;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .controls {
+            background: #2d2d30;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            padding: 6px 12px;
+            background: #0e639c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        button:hover {
+            background: #1177bb;
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        button.small {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        button.danger {
+            background: #f44336;
+        }
+
+        button.danger:hover {
+            background: #d32f2f;
+        }
+
+        button.success {
+            background: #4caf50;
+        }
+
+        button.success:hover {
+            background: #45a049;
+        }
+
+        button.secondary {
+            background: #3c3c3c;
+        }
+
+        button.secondary:hover {
+            background: #555;
+        }
+
+        .filter-container {
+            display: flex;
+            flex: 1;
+            min-width: 200px;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .filter-input {
+            flex: 1;
+            padding: 6px 8px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #d4d4d4;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .filter-input.regex-mode {
+            border-color: #9c27b0;
+        }
+
+        .filter-input.regex-error {
+            border-color: #f44336;
+        }
+
+        .filter-toggle {
+            padding: 6px 10px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #d4d4d4;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .filter-toggle:hover {
+            background: #4c4c4c;
+        }
+
+        .filter-toggle.active {
+            background: #9c27b0;
+            border-color: #9c27b0;
+            color: white;
+        }
+
+        .log-level-buttons {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .log-level-btn {
+            padding: 4px 8px;
+            background: #3c3c3c;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 10px;
+            text-transform: uppercase;
+            transition: all 0.15s;
+            opacity: 0.5;
+        }
+
+        .log-level-btn:hover {
+            opacity: 0.8;
+        }
+
+        .log-level-btn.active {
+            opacity: 1;
+        }
+
+        .log-level-btn.silly { color: #666; border-color: #666; }
+        .log-level-btn.silly.active { background: #666; color: #fff; }
+        .log-level-btn.verbose { color: #888; border-color: #888; }
+        .log-level-btn.verbose.active { background: #888; color: #fff; }
+        .log-level-btn.debug { color: #888; border-color: #888; }
+        .log-level-btn.debug.active { background: #888; color: #fff; }
+        .log-level-btn.log { color: #d4d4d4; border-color: #d4d4d4; }
+        .log-level-btn.log.active { background: #d4d4d4; color: #1e1e1e; }
+        .log-level-btn.info { color: #4ec9b0; border-color: #4ec9b0; }
+        .log-level-btn.info.active { background: #4ec9b0; color: #1e1e1e; }
+        .log-level-btn.success { color: #4caf50; border-color: #4caf50; }
+        .log-level-btn.success.active { background: #4caf50; color: #1e1e1e; }
+        .log-level-btn.warn { color: #ffa500; border-color: #ffa500; }
+        .log-level-btn.warn.active { background: #ffa500; color: #1e1e1e; }
+        .log-level-btn.error { color: #f44336; border-color: #f44336; }
+        .log-level-btn.error.active { background: #f44336; color: #fff; }
+        .log-level-btn.fatal { color: #d32f2f; border-color: #d32f2f; }
+        .log-level-btn.fatal.active { background: #d32f2f; color: #fff; }
+
+        .quick-select-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .file-filter-input {
+            width: 100%;
+            padding: 6px 8px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #d4d4d4;
+            font-family: inherit;
+            font-size: 11px;
+            margin-bottom: 6px;
+        }
+
+        .file-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background: #1e1e1e;
+        }
+
+        .file-item {
+            padding: 6px 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            font-size: 11px;
+            transition: background-color 0.15s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item:hover {
+            background: #3c3c3c;
+        }
+
+        .file-item.selected {
+            background: #0e639c;
+            color: white;
+        }
+
+        .file-item .directory {
+            color: #858585;
+            font-size: 10px;
+        }
+
+        .file-item.selected .directory {
+            color: #ccc;
+        }
+
+        .file-item .file-name-part {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-item .line-filter-btn {
+            padding: 2px 4px;
+            font-size: 9px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            color: #d4d4d4;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 4px;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .file-item:hover .line-filter-btn,
+        .file-item.selected .line-filter-btn {
+            opacity: 1;
+        }
+
+        .file-item .line-filter-btn:hover {
+            background: #555;
+        }
+
+        .file-item .line-filter-btn.active {
+            background: #ffa500;
+            color: #000;
+            border-color: #ffa500;
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .slider-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .slider-group label {
+            color: #858585;
+            font-size: 11px;
+            white-space: nowrap;
+            min-width: 70px;
+        }
+
+        .slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: #3c3c3c;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #0e639c;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: #0e639c;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            background: #3c3c3c;
+            padding: 2px 6px;
+            border-radius: 3px;
+            min-width: 40px;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .logs-header {
+            background: #2d2d30;
+            padding: 8px 12px;
+            border-radius: 6px 6px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logs-header .stats {
+            display: flex;
+            gap: 15px;
+            font-size: 11px;
+            color: #858585;
+        }
+
+        .checks-results {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            max-width: 300px;
+        }
+
+        .check-result-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .check-result-icon:hover {
+            transform: scale(1.2);
+        }
+
+        .check-result-icon.pass {
+            background: #2e7d32;
+            color: #fff;
+        }
+
+        .check-result-icon.fail {
+            background: #c62828;
+            color: #fff;
+        }
+
+        .check-result-icon.neutral {
+            background: #555;
+            color: #999;
+        }
+
+        .logs-container {
+            background: #1e1e1e;
+            border-radius: 0 0 6px 6px;
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid #3c3c3c;
+            border-top: none;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 6px 10px;
+            border-bottom: 1px solid #2d2d30;
+            border-left: 3px solid #555;
+            font-size: 12px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .log-entry:hover {
+            background: #2a2a2a;
+        }
+
+        .log-entry.new {
+            animation: fadeIn 0.1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            0% { transform: translateX(10px); }
+            100% { transform: translateX(0); }
+        }
+
+        .log-entry.silly { border-left-color: #666; }
+        .log-entry.verbose { border-left-color: #888; }
+        .log-entry.debug { border-left-color: #888; }
+        .log-entry.log { border-left-color: #d4d4d4; }
+        .log-entry.info { border-left-color: #4ec9b0; }
+        .log-entry.success { border-left-color: #4caf50; }
+        .log-entry.warn { border-left-color: #ffa500; }
+        .log-entry.error { border-left-color: #f44336; }
+        .log-entry.fatal { border-left-color: #d32f2f; }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
+        .log-header-left {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .log-type {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .log-type.silly { color: #666; }
+        .log-type.verbose { color: #888; }
+        .log-type.debug { color: #888; }
+        .log-type.log { color: #d4d4d4; }
+        .log-type.info { color: #4ec9b0; }
+        .log-type.success { color: #4caf50; }
+        .log-type.warn { color: #ffa500; }
+        .log-type.error { color: #f44336; }
+        .log-type.fatal { color: #d32f2f; }
+
+        .log-date {
+            color: #666;
+            font-size: 10px;
+        }
+
+        .log-checks {
+            display: flex;
+            gap: 2px;
+        }
+
+        .log-check-icon {
+            width: 14px;
+            height: 14px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .log-check-icon.pass {
+            background: #2e7d32;
+            color: #fff;
+        }
+
+        .log-check-icon.fail {
+            background: #c62828;
+            color: #fff;
+        }
+
+        .log-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-line {
+            color: #858585;
+            font-size: 10px;
+            font-style: italic;
+        }
+
+        .log-content {
+            white-space: pre-wrap;
+            color: #ccc;
+        }
+
+        .log-content .highlight {
+            background: #9c27b0;
+            color: #fff;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #858585;
+        }
+
+        .selected-files-info {
+            font-size: 10px;
+            color: #858585;
+            margin-top: 6px;
+        }
+
+        /* Disconnect overlay */
+        .disconnect-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .disconnect-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .disconnect-overlay .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .disconnect-overlay h2 {
+            color: #f44336;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .disconnect-overlay p {
+            color: #858585;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .disconnect-overlay .reconnect-info {
+            color: #ffa500;
+            font-size: 14px;
+        }
+
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: sticky;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0e639c;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 11px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            z-index: 100;
+            text-align: center;
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+        .scroll-indicator.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-indicator:hover {
+            background: #1177bb;
+        }
+
+        /* Modal overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: #2d2d30;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h3 {
+            color: #4ec9b0;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .modal p {
+            color: #858585;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+
+        .line-ranges-container {
+            margin-bottom: 10px;
+        }
+
+        .line-range-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .line-range-row input {
+            width: 70px;
+            padding: 5px 6px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #d4d4d4;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .line-range-row input::placeholder {
+            color: #858585;
+        }
+
+        .line-range-row span {
+            color: #858585;
+            font-size: 11px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        /* Checks section */
+        .checks-container {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 6px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 11px;
+        }
+
+        .check-item input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+
+        .check-item .check-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .check-item .check-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .check-item button {
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+
+        .add-check-btn {
+            width: 100%;
+            margin-top: 6px;
+        }
+
+        /* Check modal */
+        .check-modal {
+            max-width: 600px;
+        }
+
+        .check-modal textarea {
+            width: 100%;
+            height: 150px;
+            background: #1e1e1e;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            padding: 10px;
+            resize: vertical;
+        }
+
+        .check-modal input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #d4d4d4;
+            font-family: inherit;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .check-params {
+            background: #1e1e1e;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #858585;
+            margin-bottom: 10px;
+        }
+
+        .check-params code {
+            color: #4ec9b0;
+        }
+
+        /* Checks filter section */
+        .checks-filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .check-filter-chip {
+            padding: 3px 8px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 12px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .check-filter-chip:hover {
+            background: #4c4c4c;
+        }
+
+        .check-filter-chip.active {
+            background: #0e639c;
+            border-color: #0e639c;
+        }
+
+        /* Log detail popup */
+        .log-detail-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-detail-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .log-detail-header {
+            background: #2d2d30;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3c3c3c;
+        }
+
+        .log-detail-header h2 {
+            color: #4ec9b0;
+            font-size: 16px;
+        }
+
+        .log-detail-header .close-btn {
+            background: none;
+            border: none;
+            color: #858585;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0 10px;
+        }
+
+        .log-detail-header .close-btn:hover {
+            color: #fff;
+        }
+
+        .log-detail-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .log-detail-section {
+            background: #252526;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .log-detail-section h4 {
+            color: #4ec9b0;
+            font-size: 13px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-detail-section pre {
+            background: #1e1e1e;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .log-detail-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .log-detail-meta-item {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .log-detail-meta-item label {
+            color: #858585;
+            font-size: 10px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .log-detail-meta-item span {
+            font-size: 12px;
+        }
+
+        .copy-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .copy-buttons button {
+            font-size: 11px;
+            padding: 4px 10px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 13px;
+            z-index: 20000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="disconnect-overlay" id="disconnectOverlay">
+        <div class="icon">&#x26A0;</div>
+        <h2>Connection Lost</h2>
+        <p>WebSocket disconnected from the server</p>
+        <div class="reconnect-info" id="reconnectInfo">Reconnecting in 3s...</div>
+    </div>
+
+    <!-- Line filter modal -->
+    <div class="modal-overlay" id="lineFilterModal">
+        <div class="modal">
+            <h3 id="modalTitle">Line Filter for file.ts</h3>
+            <p>Specify line ranges to display logs only from those lines.</p>
+            <div class="line-ranges-container" id="lineRangesContainer"></div>
+            <button class="success small" id="addRangeBtn">+ Add Range</button>
+            <div class="modal-buttons">
+                <button class="secondary" id="cancelModalBtn">Cancel</button>
+                <button class="danger" id="clearRangesBtn">Clear All</button>
+                <button id="saveRangesBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Check editor modal -->
+    <div class="modal-overlay" id="checkModal">
+        <div class="modal check-modal">
+            <h3 id="checkModalTitle">Create Check</h3>
+            <input type="text" id="checkNameInput" placeholder="Check name (e.g., 'Has error property')">
+            <div class="check-params">
+                <strong>Function parameters:</strong><br>
+                <code>date</code>: Date, <code>type</code>: string, <code>callLine</code>: string, <code>argList</code>: any[], <code>boundDatas</code>: object<br>
+                <strong>Must return:</strong> boolean
+            </div>
+            <textarea id="checkCodeInput" placeholder="// Write your check logic here
+// Example: return argList.some(arg => typeof arg === 'object' && arg?.error);
+return true;"></textarea>
+            <div class="modal-buttons">
+                <button class="secondary" id="cancelCheckBtn">Cancel</button>
+                <button id="saveCheckBtn">Save Check</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log detail popup -->
+    <div class="log-detail-overlay" id="logDetailOverlay">
+        <div class="log-detail-header">
+            <h2>Log Details</h2>
+            <button class="close-btn" id="closeLogDetail">&times;</button>
+        </div>
+        <div class="log-detail-content" id="logDetailContent"></div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <div class="main-layout">
+        <!-- Logs panel (left, takes majority of space) -->
+        <div class="logs-panel">
+            <div class="header">
+                <h1>LoggyLogger</h1>
+                <div class="status">
+                    <div class="status-indicator" id="statusIndicator"></div>
+                    <span id="statusText">Disconnected</span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="connectBtn">Connect</button>
+                <button id="disconnectBtn" disabled>Disconnect</button>
+                <button id="clearBtn">Clear</button>
+                <div class="filter-container">
+                    <input type="text" class="filter-input" id="filterInput" placeholder="Search logs...">
+                    <button class="filter-toggle" id="regexToggle" title="Toggle regex mode">.*</button>
+                </div>
+            </div>
+
+            <div class="logs-header">
+                <div class="stats">
+                    <span>Total: <strong id="totalCount">0</strong></span>
+                    <span>Displayed: <strong id="visibleCount">0</strong></span>
+                    <span>Buffer: <strong id="bufferInfo">1000</strong></span>
+                </div>
+                <div class="checks-results" id="checksResults"></div>
+            </div>
+
+            <div class="logs-container" id="logsContainer">
+                <div class="empty-state">No logs received. Connect to WebSocket to start.</div>
+                <div class="scroll-indicator" id="scrollIndicator">New logs - Click to scroll down</div>
+            </div>
+        </div>
+
+        <!-- Settings panel (right, compact) -->
+        <div class="settings-panel">
+            <div class="settings-section">
+                <h3>
+                    Log Levels
+                    <div class="quick-select-btns">
+                        <button class="small secondary" id="selectAllLevels">All</button>
+                        <button class="small secondary" id="selectNoneLevels">None</button>
+                        <button class="small secondary" id="selectInfoAndAbove">Info+</button>
+                    </div>
+                </h3>
+                <div class="log-level-buttons" id="logLevelButtons">
+                    <button class="log-level-btn silly" data-level="silly">Silly</button>
+                    <button class="log-level-btn verbose" data-level="verbose">Verbose</button>
+                    <button class="log-level-btn debug" data-level="debug">Debug</button>
+                    <button class="log-level-btn log" data-level="log">Log</button>
+                    <button class="log-level-btn info active" data-level="info">Info</button>
+                    <button class="log-level-btn success active" data-level="success">Success</button>
+                    <button class="log-level-btn warn active" data-level="warn">Warn</button>
+                    <button class="log-level-btn error active" data-level="error">Error</button>
+                    <button class="log-level-btn fatal active" data-level="fatal">Fatal</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>
+                    Files
+                    <button class="small secondary" id="clearFilesBtn">Clear</button>
+                </h3>
+                <input type="text" class="file-filter-input" id="fileFilterInput" placeholder="Filter files...">
+                <div class="file-list" id="fileList">
+                    <div class="empty-state" style="padding: 15px; font-size: 11px;">Loading files...</div>
+                </div>
+                <div class="selected-files-info" id="selectedFilesInfo">No files selected</div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Display</h3>
+                <div class="slider-group">
+                    <label>Depth:</label>
+                    <input type="range" class="slider" id="depthSlider" min="0" max="6" value="2">
+                    <span class="slider-value" id="depthValue">2</span>
+                </div>
+                <div class="slider-group">
+                    <label>Buffer:</label>
+                    <input type="range" class="slider" id="bufferSlider" min="0" max="5" value="2">
+                    <span class="slider-value" id="bufferValue">1000</span>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>
+                    Checks
+                    <span style="font-size: 10px; color: #858585;" id="checksCount">0/100</span>
+                </h3>
+                <div class="checks-container" id="checksContainer">
+                    <div style="font-size: 11px; color: #858585; padding: 10px; text-align: center;">No checks defined</div>
+                </div>
+                <button class="add-check-btn success small" id="addCheckBtn">+ Add Check</button>
+            </div>
+
+            <div class="settings-section">
+                <h3>Filter by Checks</h3>
+                <p style="font-size: 10px; color: #858585; margin-bottom: 8px;">Only show logs where selected checks pass</p>
+                <div class="checks-filter-container" id="checksFilterContainer">
+                    <span style="font-size: 11px; color: #666;">No checks available</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let logs = []; // Array of log objects with metadata
+        let logElements = new Map(); // Map logId -> DOM element
+        let logIdCounter = 0;
+        let searchFilter = '';
+        let isRegexMode = false;
+        let searchRegex = null;
+        let availableFiles = [];
+        let selectedFiles = new Set();
+        let fileFilter = '';
+        let objectDepth = 2;
+        let bufferSize = 1000;
+        let autoScroll = true;
+        let isConnected = false;
+        let reconnectAttempts = 0;
+        let reconnectTimer = null;
+        let manualDisconnect = false;
+        let lineFilters = {};
+        let currentEditingFile = null;
+        let enabledLogLevels = new Set(['info', 'success', 'warn', 'error', 'fatal']);
+
+        // Checks system
+        let checks = []; // { id, name, code, enabled }
+        let checkIdCounter = 0;
+        let editingCheckId = null;
+        let checksFilter = new Set(); // Set of check IDs that must pass
+
+        // Detail popup
+        let currentDetailLog = null;
+
+        const LOG_LEVELS = ['silly', 'verbose', 'debug', 'log', 'info', 'success', 'warn', 'error', 'fatal'];
+        const BUFFER_PRESETS = [100, 500, 1000, 5000, 10000, 50000];
+        const MAX_RECONNECT_DELAY = 30000;
+        const BASE_RECONNECT_DELAY = 1000;
+        const MAX_CHECKS = 100;
+
+        // DOM elements
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const filterInput = document.getElementById('filterInput');
+        const regexToggle = document.getElementById('regexToggle');
+        const logsContainer = document.getElementById('logsContainer');
+        const totalCount = document.getElementById('totalCount');
+        const visibleCount = document.getElementById('visibleCount');
+        const bufferInfo = document.getElementById('bufferInfo');
+        const fileFilterInput = document.getElementById('fileFilterInput');
+        const fileList = document.getElementById('fileList');
+        const clearFilesBtn = document.getElementById('clearFilesBtn');
+        const selectedFilesInfo = document.getElementById('selectedFilesInfo');
+        const depthSlider = document.getElementById('depthSlider');
+        const depthValue = document.getElementById('depthValue');
+        const bufferSlider = document.getElementById('bufferSlider');
+        const bufferValue = document.getElementById('bufferValue');
+        const disconnectOverlay = document.getElementById('disconnectOverlay');
+        const reconnectInfo = document.getElementById('reconnectInfo');
+        const scrollIndicator = document.getElementById('scrollIndicator');
+        const lineFilterModal = document.getElementById('lineFilterModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const lineRangesContainer = document.getElementById('lineRangesContainer');
+        const addRangeBtn = document.getElementById('addRangeBtn');
+        const cancelModalBtn = document.getElementById('cancelModalBtn');
+        const clearRangesBtn = document.getElementById('clearRangesBtn');
+        const saveRangesBtn = document.getElementById('saveRangesBtn');
+        const logLevelButtons = document.getElementById('logLevelButtons');
+        const selectAllLevels = document.getElementById('selectAllLevels');
+        const selectNoneLevels = document.getElementById('selectNoneLevels');
+        const selectInfoAndAbove = document.getElementById('selectInfoAndAbove');
+        const checksContainer = document.getElementById('checksContainer');
+        const checksCount = document.getElementById('checksCount');
+        const addCheckBtn = document.getElementById('addCheckBtn');
+        const checkModal = document.getElementById('checkModal');
+        const checkModalTitle = document.getElementById('checkModalTitle');
+        const checkNameInput = document.getElementById('checkNameInput');
+        const checkCodeInput = document.getElementById('checkCodeInput');
+        const cancelCheckBtn = document.getElementById('cancelCheckBtn');
+        const saveCheckBtn = document.getElementById('saveCheckBtn');
+        const checksFilterContainer = document.getElementById('checksFilterContainer');
+        const checksResults = document.getElementById('checksResults');
+        const logDetailOverlay = document.getElementById('logDetailOverlay');
+        const logDetailContent = document.getElementById('logDetailContent');
+        const closeLogDetailElem = document.getElementById('closeLogDetail');
+        const toast = document.getElementById('toast');
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 2000);
+        }
+
+        function updateStatus(connected) {
+            isConnected = connected;
+            if (connected) {
+                statusIndicator.classList.add('connected');
+                statusText.textContent = 'Connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                disconnectOverlay.classList.remove('visible');
+                reconnectAttempts = 0;
+            } else {
+                statusIndicator.classList.remove('connected');
+                statusText.textContent = 'Disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                if (!manualDisconnect) {
+                    disconnectOverlay.classList.add('visible');
+                }
+            }
+        }
+
+        function getReconnectDelay() {
+            return Math.min(BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttempts), MAX_RECONNECT_DELAY);
+        }
+
+        function scheduleReconnect() {
+            if (manualDisconnect) return;
+            const delay = getReconnectDelay();
+            let countdown = Math.ceil(delay / 1000);
+            reconnectInfo.textContent = `Reconnecting in ${countdown}s...`;
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    reconnectInfo.textContent = `Reconnecting in ${countdown}s...`;
+                } else {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+            reconnectTimer = setTimeout(() => {
+                clearInterval(countdownInterval);
+                reconnectInfo.textContent = 'Connecting...';
+                reconnectAttempts++;
+                connect();
+            }, delay);
+        }
+
+        function sortFiles(files) {
+            return files.slice().sort((a, b) => {
+                const aParts = a.split(/[/\\]/);
+                const bParts = b.split(/[/\\]/);
+                const minLen = Math.min(aParts.length, bParts.length);
+                for (let i = 0; i < minLen; i++) {
+                    const aIsLast = i === aParts.length - 1;
+                    const bIsLast = i === bParts.length - 1;
+                    if (!aIsLast && bIsLast) return -1;
+                    if (aIsLast && !bIsLast) return 1;
+                    const cmp = aParts[i].localeCompare(bParts[i], undefined, { sensitivity: 'base' });
+                    if (cmp !== 0) return cmp;
+                }
+                return aParts.length - bParts.length;
+            });
+        }
+
+        async function fetchLogFiles() {
+            try {
+                const response = await fetch('/api/logFiles');
+                if (response.ok) {
+                    const files = await response.json();
+                    availableFiles = sortFiles(files);
+                    renderFileList();
+                } else {
+                    fileList.innerHTML = '<div class="empty-state" style="padding: 15px; font-size: 11px;">Failed to load files</div>';
+                }
+            } catch (e) {
+                console.error('Error fetching log files:', e);
+                fileList.innerHTML = '<div class="empty-state" style="padding: 15px; font-size: 11px;">Error loading files</div>';
+            }
+        }
+
+        function openLineFilterModal(file) {
+            currentEditingFile = file;
+            const parts = file.split(/[/\\]/);
+            const fileName = parts.pop();
+            modalTitle.textContent = `Line Filter: ${fileName}`;
+            const ranges = lineFilters[file] || [];
+            renderLineRanges(ranges);
+            lineFilterModal.classList.add('visible');
+        }
+
+        function closeLineFilterModal() {
+            lineFilterModal.classList.remove('visible');
+            currentEditingFile = null;
+        }
+
+        function renderLineRanges(ranges) {
+            lineRangesContainer.innerHTML = '';
+            if (ranges.length === 0) ranges.push([null, null]);
+            ranges.forEach((range, index) => {
+                const row = document.createElement('div');
+                row.className = 'line-range-row';
+                row.innerHTML = `
+                    <span>Lines</span>
+                    <input type="number" placeholder="Start" value="${range[0] || ''}" data-index="${index}" data-type="start" min="1">
+                    <span>to</span>
+                    <input type="number" placeholder="End" value="${range[1] || ''}" data-index="${index}" data-type="end" min="1">
+                    <button type="button" data-index="${index}" class="remove-range-btn small danger">X</button>
+                `;
+                lineRangesContainer.appendChild(row);
+            });
+            lineRangesContainer.querySelectorAll('.remove-range-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const rows = lineRangesContainer.querySelectorAll('.line-range-row');
+                    if (rows.length > 1) rows[index].remove();
+                });
+            });
+        }
+
+        function getModalRanges() {
+            const ranges = [];
+            lineRangesContainer.querySelectorAll('.line-range-row').forEach(row => {
+                const start = parseInt(row.querySelector('input[data-type="start"]').value) || null;
+                const end = parseInt(row.querySelector('input[data-type="end"]').value) || null;
+                if (start !== null && end !== null && start <= end) {
+                    ranges.push([start, end]);
+                }
+            });
+            return ranges;
+        }
+
+        addRangeBtn.addEventListener('click', () => {
+            const currentRanges = getModalRanges();
+            currentRanges.push([null, null]);
+            renderLineRanges(currentRanges);
+        });
+
+        cancelModalBtn.addEventListener('click', closeLineFilterModal);
+
+        clearRangesBtn.addEventListener('click', () => {
+            if (currentEditingFile) {
+                delete lineFilters[currentEditingFile];
+                renderFileList();
+                fullRender();
+            }
+            closeLineFilterModal();
+        });
+
+        saveRangesBtn.addEventListener('click', () => {
+            if (currentEditingFile) {
+                const ranges = getModalRanges();
+                if (ranges.length > 0) {
+                    lineFilters[currentEditingFile] = ranges;
+                } else {
+                    delete lineFilters[currentEditingFile];
+                }
+                renderFileList();
+                fullRender();
+            }
+            closeLineFilterModal();
+        });
+
+        lineFilterModal.addEventListener('click', (e) => {
+            if (e.target === lineFilterModal) closeLineFilterModal();
+        });
+
+        function renderFileList() {
+            const filtered = fileFilter
+                ? availableFiles.filter(f => f.toLowerCase().includes(fileFilter.toLowerCase()))
+                : availableFiles;
+
+            if (filtered.length === 0) {
+                fileList.innerHTML = '<div class="empty-state" style="padding: 15px; font-size: 11px;">No files match</div>';
+                return;
+            }
+
+            fileList.innerHTML = '';
+            filtered.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'file-item' + (selectedFiles.has(file) ? ' selected' : '');
+                const parts = file.split(/[/\\]/);
+                const fileName = parts.pop();
+                const directory = parts.join('/');
+                const namePart = document.createElement('span');
+                namePart.className = 'file-name-part';
+                if (directory) {
+                    namePart.innerHTML = `<span class="directory">${directory}/</span>${fileName}`;
+                } else {
+                    namePart.textContent = fileName;
+                }
+                item.appendChild(namePart);
+
+                if (selectedFiles.has(file) && selectedFiles.size <= 10) {
+                    const lineBtn = document.createElement('button');
+                    lineBtn.className = 'line-filter-btn' + (lineFilters[file] ? ' active' : '');
+                    lineBtn.textContent = lineFilters[file] ? `${lineFilters[file].length}` : 'L';
+                    lineBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openLineFilterModal(file);
+                    });
+                    item.appendChild(lineBtn);
+                }
+
+                item.addEventListener('click', () => {
+                    if (selectedFiles.has(file)) {
+                        selectedFiles.delete(file);
+                        delete lineFilters[file];
+                    } else {
+                        selectedFiles.add(file);
+                    }
+                    updateSelectedFilesInfo();
+                    renderFileList();
+                    fullRender();
+                });
+
+                fileList.appendChild(item);
+            });
+        }
+
+        function updateSelectedFilesInfo() {
+            const count = selectedFiles.size;
+            if (count === 0) {
+                selectedFilesInfo.textContent = 'No files selected (all logs)';
+            } else {
+                const lineFilterCount = Object.keys(lineFilters).length;
+                let text = `${count} file${count > 1 ? 's' : ''}`;
+                if (lineFilterCount > 0) text += ` (${lineFilterCount} filtered)`;
+                selectedFilesInfo.textContent = text;
+            }
+        }
+
+        function updateLogLevelButtons() {
+            logLevelButtons.querySelectorAll('.log-level-btn').forEach(btn => {
+                const level = btn.dataset.level;
+                btn.classList.toggle('active', enabledLogLevels.has(level));
+            });
+        }
+
+        function toggleLogLevel(level) {
+            if (enabledLogLevels.has(level)) {
+                enabledLogLevels.delete(level);
+            } else {
+                enabledLogLevels.add(level);
+            }
+            updateLogLevelButtons();
+            fullRender();
+        }
+
+        logLevelButtons.addEventListener('click', (e) => {
+            const btn = e.target.closest('.log-level-btn');
+            if (btn) toggleLogLevel(btn.dataset.level);
+        });
+
+        selectAllLevels.addEventListener('click', () => {
+            enabledLogLevels = new Set(LOG_LEVELS);
+            updateLogLevelButtons();
+            fullRender();
+        });
+
+        selectNoneLevels.addEventListener('click', () => {
+            enabledLogLevels.clear();
+            updateLogLevelButtons();
+            fullRender();
+        });
+
+        selectInfoAndAbove.addEventListener('click', () => {
+            enabledLogLevels = new Set(['info', 'success', 'warn', 'error', 'fatal']);
+            updateLogLevelButtons();
+            fullRender();
+        });
+
+        function updateSearchFilter() {
+            searchFilter = filterInput.value;
+            searchRegex = null;
+            filterInput.classList.remove('regex-error');
+
+            if (isRegexMode && searchFilter) {
+                try {
+                    searchRegex = new RegExp(searchFilter, 'gi');
+                    filterInput.classList.add('regex-mode');
+                } catch (e) {
+                    filterInput.classList.add('regex-error');
+                    searchRegex = null;
+                }
+            } else {
+                filterInput.classList.remove('regex-mode');
+            }
+
+            fullRender();
+        }
+
+        regexToggle.addEventListener('click', () => {
+            isRegexMode = !isRegexMode;
+            regexToggle.classList.toggle('active', isRegexMode);
+            filterInput.placeholder = isRegexMode ? 'Regex search...' : 'Search logs...';
+            updateSearchFilter();
+        });
+
+        filterInput.addEventListener('input', updateSearchFilter);
+
+        function formatArgs(args, depth) {
+            if (!args || args.length === 0) return '';
+            return args.map(arg => {
+                if (typeof arg === 'object' && arg !== null) {
+                    try {
+                        return stringifyWithDepth(arg, depth);
+                    } catch (e) {
+                        return String(arg);
+                    }
+                }
+                return String(arg);
+            }).join(' ');
+        }
+
+        function stringifyWithDepth(obj, maxDepth, currentDepth = 0) {
+            if (obj === null) return 'null';
+            if (obj === undefined) return 'undefined';
+            if (typeof obj !== 'object') return JSON.stringify(obj);
+
+            if (currentDepth >= maxDepth) {
+                if (Array.isArray(obj)) return `[Array(${obj.length})]`;
+                const keys = Object.keys(obj);
+                if (keys.length === 0) return '{}';
+                return `{${keys.join(', ')}}`;
+            }
+
+            if (Array.isArray(obj)) {
+                if (obj.length === 0) return '[]';
+                const items = obj.map(item => stringifyWithDepth(item, maxDepth, currentDepth + 1));
+                return '[\n' + items.map(item => '  '.repeat(currentDepth + 1) + item).join(',\n') + '\n' + '  '.repeat(currentDepth) + ']';
+            }
+
+            const keys = Object.keys(obj);
+            if (keys.length === 0) return '{}';
+            const items = keys.map(key => {
+                const value = stringifyWithDepth(obj[key], maxDepth, currentDepth + 1);
+                return '  '.repeat(currentDepth + 1) + JSON.stringify(key) + ': ' + value;
+            });
+            return '{\n' + items.join(',\n') + '\n' + '  '.repeat(currentDepth) + '}';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleString('fr-FR', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    fractionalSecondDigits: 3
+                });
+            } catch (e) {
+                return dateString;
+            }
+        }
+
+        function getFileFromCallLine(callLine) {
+            if (!callLine) return null;
+            const match = callLine.match(/^(.+?):(\d+)(?::\d+)?$/);
+            return match ? match[1] : callLine;
+        }
+
+        function getLineFromCallLine(callLine) {
+            if (!callLine) return null;
+            const match = callLine.match(/:(\d+)(?::\d+)?$/);
+            return match ? parseInt(match[1]) : null;
+        }
+
+        function isLineInRanges(line, ranges) {
+            if (!ranges || ranges.length === 0) return true;
+            return ranges.some(([start, end]) => line >= start && line <= end);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function highlightMatches(text, regex) {
+            if (!regex) return escapeHtml(text);
+            regex.lastIndex = 0;
+            const result = [];
+            let lastIndex = 0;
+            let match;
+            while ((match = regex.exec(text)) !== null) {
+                if (match.index > lastIndex) {
+                    result.push(escapeHtml(text.slice(lastIndex, match.index)));
+                }
+                result.push(`<span class="highlight">${escapeHtml(match[0])}</span>`);
+                lastIndex = regex.lastIndex;
+                if (match[0].length === 0) regex.lastIndex++;
+            }
+            if (lastIndex < text.length) {
+                result.push(escapeHtml(text.slice(lastIndex)));
+            }
+            return result.join('');
+        }
+
+        function matchesSearch(logText) {
+            if (!searchFilter) return true;
+            if (isRegexMode && searchRegex) {
+                searchRegex.lastIndex = 0;
+                return searchRegex.test(logText);
+            }
+            return logText.toLowerCase().includes(searchFilter.toLowerCase());
+        }
+
+        // Checks system
+        function runCheck(check, log) {
+            try {
+                const fn = new Function('date', 'type', 'callLine', 'argList', 'boundDatas', check.code);
+                const date = log.date ? new Date(log.date) : new Date();
+                const boundDatas = log.boundDatas || {};
+                return !!fn(date, log.type, log.callLine, log.argList, boundDatas);
+            } catch (e) {
+                console.error('Check error:', check.name, e);
+                return false;
+            }
+        }
+
+        function getLogCheckResults(log) {
+            const results = {};
+            checks.filter(c => c.enabled).forEach(check => {
+                results[check.id] = runCheck(check, log);
+            });
+            return results;
+        }
+
+        function passesChecksFilter(log) {
+            if (checksFilter.size === 0) return true;
+            const results = getLogCheckResults(log);
+            for (const checkId of checksFilter) {
+                if (!results[checkId]) return false;
+            }
+            return true;
+        }
+
+        function renderChecksContainer() {
+            checksCount.textContent = `${checks.length}/${MAX_CHECKS}`;
+            addCheckBtn.disabled = checks.length >= MAX_CHECKS;
+
+            if (checks.length === 0) {
+                checksContainer.innerHTML = '<div style="font-size: 11px; color: #858585; padding: 10px; text-align: center;">No checks defined</div>';
+            } else {
+                checksContainer.innerHTML = '';
+                checks.forEach(check => {
+                    const item = document.createElement('div');
+                    item.className = 'check-item';
+                    item.innerHTML = `
+                        <input type="checkbox" ${check.enabled ? 'checked' : ''} data-id="${check.id}">
+                        <span class="check-name" title="${escapeHtml(check.name)}">${check.id}: ${escapeHtml(check.name)}</span>
+                        <div class="check-actions">
+                            <button class="secondary edit-check" data-id="${check.id}">Edit</button>
+                            <button class="danger del-check" data-id="${check.id}">X</button>
+                        </div>
+                    `;
+                    checksContainer.appendChild(item);
+                });
+
+                checksContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    cb.addEventListener('change', (e) => {
+                        const id = parseInt(e.target.dataset.id);
+                        const check = checks.find(c => c.id === id);
+                        if (check) {
+                            check.enabled = e.target.checked;
+                            renderChecksFilterContainer();
+                            fullRender();
+                        }
+                    });
+                });
+
+                checksContainer.querySelectorAll('.edit-check').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(e.target.dataset.id);
+                        openCheckModal(id);
+                    });
+                });
+
+                checksContainer.querySelectorAll('.del-check').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(e.target.dataset.id);
+                        checks = checks.filter(c => c.id !== id);
+                        checksFilter.delete(id);
+                        renderChecksContainer();
+                        renderChecksFilterContainer();
+                        fullRender();
+                    });
+                });
+            }
+        }
+
+        function renderChecksFilterContainer() {
+            const enabledChecks = checks.filter(c => c.enabled);
+            if (enabledChecks.length === 0) {
+                checksFilterContainer.innerHTML = '<span style="font-size: 11px; color: #666;">No checks enabled</span>';
+                return;
+            }
+            checksFilterContainer.innerHTML = '';
+            enabledChecks.forEach(check => {
+                const chip = document.createElement('span');
+                chip.className = 'check-filter-chip' + (checksFilter.has(check.id) ? ' active' : '');
+                chip.textContent = check.id;
+                chip.title = check.name;
+                chip.addEventListener('click', () => {
+                    if (checksFilter.has(check.id)) {
+                        checksFilter.delete(check.id);
+                    } else {
+                        checksFilter.add(check.id);
+                    }
+                    renderChecksFilterContainer();
+                    fullRender();
+                });
+                checksFilterContainer.appendChild(chip);
+            });
+        }
+
+        function openCheckModal(checkId = null) {
+            editingCheckId = checkId;
+            if (checkId !== null) {
+                const check = checks.find(c => c.id === checkId);
+                if (check) {
+                    checkModalTitle.textContent = 'Edit Check';
+                    checkNameInput.value = check.name;
+                    checkCodeInput.value = check.code;
+                }
+            } else {
+                checkModalTitle.textContent = 'Create Check';
+                checkNameInput.value = '';
+                checkCodeInput.value = '// Example: return argList.some(arg => arg?.error);\nreturn true;';
+            }
+            checkModal.classList.add('visible');
+            checkNameInput.focus();
+        }
+
+        function closeCheckModal() {
+            checkModal.classList.remove('visible');
+            editingCheckId = null;
+        }
+
+        addCheckBtn.addEventListener('click', () => openCheckModal());
+        cancelCheckBtn.addEventListener('click', closeCheckModal);
+        checkModal.addEventListener('click', (e) => {
+            if (e.target === checkModal) closeCheckModal();
+        });
+
+        saveCheckBtn.addEventListener('click', () => {
+            const name = checkNameInput.value.trim() || 'Unnamed Check';
+            const code = checkCodeInput.value;
+
+            // Validate code
+            try {
+                new Function('date', 'type', 'callLine', 'argList', 'boundDatas', code);
+            } catch (e) {
+                showToast('Invalid code: ' + e.message);
+                return;
+            }
+
+            if (editingCheckId !== null) {
+                const check = checks.find(c => c.id === editingCheckId);
+                if (check) {
+                    check.name = name;
+                    check.code = code;
+                }
+            } else {
+                if (checks.length >= MAX_CHECKS) {
+                    showToast('Maximum 100 checks allowed');
+                    return;
+                }
+                checks.push({
+                    id: ++checkIdCounter,
+                    name,
+                    code,
+                    enabled: true
+                });
+            }
+
+            renderChecksContainer();
+            renderChecksFilterContainer();
+            fullRender();
+            closeCheckModal();
+        });
+
+        function shouldShowLog(log) {
+            // Check log level
+            if (!enabledLogLevels.has(log.type.toLowerCase())) return false;
+
+            // Check search filter
+            const logText = formatArgs(log.argList, objectDepth);
+            if (!matchesSearch(logText)) return false;
+
+            // Check file filter
+            if (selectedFiles.size > 0) {
+                const file = getFileFromCallLine(log.callLine);
+                if (!file || !selectedFiles.has(file)) return false;
+                const ranges = lineFilters[file];
+                if (ranges && ranges.length > 0) {
+                    const line = getLineFromCallLine(log.callLine);
+                    if (line === null || !isLineInRanges(line, ranges)) return false;
+                }
+            }
+
+            // Check checks filter
+            if (!passesChecksFilter(log)) return false;
+
+            return true;
+        }
+
+        function createLogEntry(log, isNew = false) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${log.type}${isNew ? ' new' : ''}`;
+            entry.dataset.logId = log.id;
+
+            const header = document.createElement('div');
+            header.className = 'log-header';
+
+            const leftSide = document.createElement('div');
+            leftSide.className = 'log-header-left';
+
+            const typeSpan = document.createElement('span');
+            typeSpan.className = `log-type ${log.type}`;
+            typeSpan.textContent = log.type;
+
+            const dateSpan = document.createElement('span');
+            dateSpan.className = 'log-date';
+            dateSpan.textContent = log.date ? formatDate(log.date) : '';
+
+            // Check results for this log
+            const checksDiv = document.createElement('div');
+            checksDiv.className = 'log-checks';
+            const enabledChecks = checks.filter(c => c.enabled);
+            enabledChecks.forEach(check => {
+                const result = runCheck(check, log);
+                const icon = document.createElement('span');
+                icon.className = `log-check-icon ${result ? 'pass' : 'fail'}`;
+                icon.textContent = check.id;
+                icon.title = `${check.name}: ${result ? 'Pass' : 'Fail'}`;
+                checksDiv.appendChild(icon);
+            });
+
+            leftSide.appendChild(typeSpan);
+            leftSide.appendChild(dateSpan);
+            leftSide.appendChild(checksDiv);
+
+            const rightSide = document.createElement('div');
+            rightSide.className = 'log-header-right';
+
+            const lineSpan = document.createElement('span');
+            lineSpan.className = 'log-line';
+            lineSpan.textContent = log.callLine || '';
+
+            rightSide.appendChild(lineSpan);
+
+            header.appendChild(leftSide);
+            header.appendChild(rightSide);
+
+            const content = document.createElement('div');
+            content.className = 'log-content';
+
+            const logText = formatArgs(log.argList, objectDepth);
+            if (searchFilter && (isRegexMode ? searchRegex : true)) {
+                if (isRegexMode && searchRegex) {
+                    content.innerHTML = highlightMatches(logText, new RegExp(searchFilter, 'gi'));
+                } else if (searchFilter) {
+                    const regex = new RegExp(searchFilter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                    content.innerHTML = highlightMatches(logText, regex);
+                }
+            } else {
+                content.textContent = logText;
+            }
+
+            entry.appendChild(header);
+            entry.appendChild(content);
+
+            entry.addEventListener('click', () => openLogDetail(log));
+
+            return entry;
+        }
+
+        function updateChecksResultsHeader() {
+            const enabledChecks = checks.filter(c => c.enabled);
+            if (enabledChecks.length === 0) {
+                checksResults.innerHTML = '';
+                return;
+            }
+
+            checksResults.innerHTML = '';
+            const visibleLogs = logs.filter(log => shouldShowLog(log));
+
+            enabledChecks.forEach(check => {
+                let passCount = 0;
+                let failCount = 0;
+                visibleLogs.forEach(log => {
+                    if (runCheck(check, log)) passCount++;
+                    else failCount++;
+                });
+
+                const icon = document.createElement('span');
+                icon.className = `check-result-icon ${passCount > failCount ? 'pass' : failCount > 0 ? 'fail' : 'neutral'}`;
+                icon.textContent = check.id;
+                icon.title = `${check.name}\nPass: ${passCount}, Fail: ${failCount}`;
+                checksResults.appendChild(icon);
+            });
+        }
+
+        // Log detail popup
+        function openLogDetail(log) {
+            currentDetailLog = log;
+            const boundDatas = log.boundDatas || {};
+
+            logDetailContent.innerHTML = `
+                <div class="log-detail-meta">
+                    <div class="log-detail-meta-item">
+                        <label>Type</label>
+                        <span class="log-type ${log.type}">${log.type.toUpperCase()}</span>
+                    </div>
+                    <div class="log-detail-meta-item">
+                        <label>Date</label>
+                        <span>${log.date ? new Date(log.date).toLocaleString() : 'N/A'}</span>
+                    </div>
+                    <div class="log-detail-meta-item">
+                        <label>Call Line</label>
+                        <span>${log.callLine || 'N/A'}</span>
+                    </div>
+                </div>
+                <div class="log-detail-section">
+                    <h4>
+                        Arguments (depth: 5)
+                        <div class="copy-buttons">
+                            <button class="secondary" id="copyCompact">Copy Compact</button>
+                            <button class="secondary" id="copyExtended">Copy Extended</button>
+                        </div>
+                    </h4>
+                    <pre id="logArgsContent">${escapeHtml(formatArgs(log.argList, 5))}</pre>
+                </div>
+                <div class="log-detail-section">
+                    <h4>Bound Data</h4>
+                    <pre>${escapeHtml(Object.keys(boundDatas).length > 0 ? stringifyWithDepth(boundDatas, 5) : '(empty)')}</pre>
+                </div>
+                <div class="log-detail-section">
+                    <h4>Check Results</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${checks.filter(c => c.enabled).map(check => {
+                            const result = runCheck(check, log);
+                            return `<span class="log-check-icon ${result ? 'pass' : 'fail'}" style="width: auto; padding: 4px 10px;">${check.id}: ${check.name} - ${result ? 'PASS' : 'FAIL'}</span>`;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('copyCompact').addEventListener('click', () => {
+                const compact = JSON.stringify(log.argList);
+                navigator.clipboard.writeText(compact);
+                showToast('Copied compact JSON');
+            });
+
+            document.getElementById('copyExtended').addEventListener('click', () => {
+                const extended = JSON.stringify(log.argList, null, 2);
+                navigator.clipboard.writeText(extended);
+                showToast('Copied extended JSON');
+            });
+
+            logDetailOverlay.classList.add('visible');
+        }
+
+        function closeLogDetail() {
+            logDetailOverlay.classList.remove('visible');
+            currentDetailLog = null;
+        }
+
+        closeLogDetailElem.addEventListener('click', closeLogDetail);
+        logDetailOverlay.addEventListener('click', (e) => {
+            if (e.target === logDetailOverlay) closeLogDetail();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (logDetailOverlay.classList.contains('visible')) closeLogDetail();
+                else if (checkModal.classList.contains('visible')) closeCheckModal();
+                else if (lineFilterModal.classList.contains('visible')) closeLineFilterModal();
+            }
+        });
+
+        function isAtBottom() {
+            const threshold = 50;
+            return logsContainer.scrollHeight - logsContainer.scrollTop - logsContainer.clientHeight < threshold;
+        }
+
+        function updateScrollIndicator() {
+            if (!autoScroll && logs.length > 0) {
+                scrollIndicator.classList.add('visible');
+            } else {
+                scrollIndicator.classList.remove('visible');
+            }
+        }
+
+        function scrollToBottom() {
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+            autoScroll = true;
+            updateScrollIndicator();
+        }
+
+        // Optimized rendering - full render when filters change
+        function fullRender() {
+            const wasAtBottom = isAtBottom();
+
+            // Clear container except scroll indicator
+            logsContainer.innerHTML = '';
+            logsContainer.appendChild(scrollIndicator);
+            logElements.clear();
+
+            const filtered = logs.filter(log => shouldShowLog(log));
+
+            if (filtered.length === 0 && logs.length === 0) {
+                logsContainer.insertBefore(
+                    createEmptyState('No logs received. Connect to WebSocket to start.'),
+                    scrollIndicator
+                );
+            } else if (filtered.length === 0) {
+                logsContainer.insertBefore(
+                    createEmptyState('No logs match the filters.'),
+                    scrollIndicator
+                );
+            } else {
+                filtered.forEach(log => {
+                    const entry = createLogEntry(log, log.isNew);
+                    log.isNew = false;
+                    logsContainer.insertBefore(entry, scrollIndicator);
+                    logElements.set(log.id, entry);
+                });
+            }
+
+            if (wasAtBottom && autoScroll) {
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+            }
+
+            totalCount.textContent = logs.length;
+            visibleCount.textContent = filtered.length;
+            updateScrollIndicator();
+            updateChecksResultsHeader();
+        }
+
+        function createEmptyState(message) {
+            const div = document.createElement('div');
+            div.className = 'empty-state';
+            div.textContent = message;
+            return div;
+        }
+
+        // Optimized addLog - append directly to DOM
+        function addLog(logData) {
+            if (!logData.date) {
+                logData.date = new Date().toISOString();
+            }
+
+            // Default boundDatas to empty object if null/undefined
+            if (logData.boundDatas == null) {
+                logData.boundDatas = {};
+            }
+
+            const log = {
+                id: ++logIdCounter,
+                ...logData,
+                isNew: true
+            };
+
+            logs.push(log);
+
+            // Trim buffer if needed
+            while (logs.length > bufferSize) {
+                const removed = logs.shift();
+                const element = logElements.get(removed.id);
+                if (element && element.parentNode) {
+                    element.parentNode.removeChild(element);
+                }
+                logElements.delete(removed.id);
+            }
+
+            // Update file list if new file
+            const file = getFileFromCallLine(logData.callLine);
+            if (file && !availableFiles.includes(file)) {
+                availableFiles.push(file);
+                availableFiles = sortFiles(availableFiles);
+                renderFileList();
+            }
+
+            // Remove empty state if present
+            const emptyState = logsContainer.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+
+            // Check if log should be displayed
+            if (shouldShowLog(log)) {
+                const wasAtBottom = isAtBottom();
+                const entry = createLogEntry(log, true);
+                logsContainer.insertBefore(entry, scrollIndicator);
+                logElements.set(log.id, entry);
+
+                if (wasAtBottom && autoScroll) {
+                    logsContainer.scrollTop = logsContainer.scrollHeight;
+                }
+
+                visibleCount.textContent = parseInt(visibleCount.textContent) + 1;
+            }
+
+            totalCount.textContent = logs.length;
+            updateScrollIndicator();
+            updateChecksResultsHeader();
+        }
+
+        function connect() {
+            if (ws && ws.readyState === WebSocket.OPEN) return;
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                updateStatus(true);
+                manualDisconnect = false;
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type && data.argList) {
+                        addLog({
+                            type: data.type,
+                            callLine: data.callLine || '',
+                            argList: data.argList,
+                            date: data.date || new Date().toISOString(),
+                            boundDatas: data.boundDatas || {}
+                        });
+                    }
+                } catch (e) {
+                    console.error('JSON parsing error:', e);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                updateStatus(false);
+                ws = null;
+                if (!manualDisconnect) {
+                    scheduleReconnect();
+                }
+            };
+        }
+
+        function disconnect() {
+            manualDisconnect = true;
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            disconnectOverlay.classList.remove('visible');
+        }
+
+        function clearLogs() {
+            logs = [];
+            logElements.clear();
+            logIdCounter = 0;
+            fullRender();
+        }
+
+        connectBtn.addEventListener('click', () => {
+            manualDisconnect = false;
+            connect();
+        });
+        disconnectBtn.addEventListener('click', disconnect);
+        clearBtn.addEventListener('click', clearLogs);
+
+        fileFilterInput.addEventListener('input', (e) => {
+            fileFilter = e.target.value;
+            renderFileList();
+        });
+
+        clearFilesBtn.addEventListener('click', () => {
+            selectedFiles.clear();
+            lineFilters = {};
+            renderFileList();
+            updateSelectedFilesInfo();
+            fullRender();
+        });
+
+        depthSlider.addEventListener('input', (e) => {
+            objectDepth = parseInt(e.target.value, 10);
+            depthValue.textContent = objectDepth;
+            fullRender();
+        });
+
+        bufferSlider.addEventListener('input', (e) => {
+            const index = parseInt(e.target.value, 10);
+            bufferSize = BUFFER_PRESETS[index];
+            bufferValue.textContent = bufferSize.toLocaleString();
+            bufferInfo.textContent = bufferSize.toLocaleString();
+
+            while (logs.length > bufferSize) {
+                const removed = logs.shift();
+                const element = logElements.get(removed.id);
+                if (element && element.parentNode) {
+                    element.parentNode.removeChild(element);
+                }
+                logElements.delete(removed.id);
+            }
+            totalCount.textContent = logs.length;
+        });
+
+        logsContainer.addEventListener('scroll', () => {
+            autoScroll = isAtBottom();
+            updateScrollIndicator();
+        });
+
+        scrollIndicator.addEventListener('click', scrollToBottom);
+
+        window.addEventListener('load', () => {
+            bufferValue.textContent = BUFFER_PRESETS[2].toLocaleString();
+            bufferInfo.textContent = BUFFER_PRESETS[2].toLocaleString();
+            fetchLogFiles();
+            renderChecksContainer();
+            renderChecksFilterContainer();
+            setTimeout(connect, 500);
+        });
+    </script>
+</body>
+</html>

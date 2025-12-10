@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoggyLogger - Live Logs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+        }
+
+        .header {
+            background: #2d2d30;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #4ec9b0;
+            font-size: 24px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #f44336;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #4caf50;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .controls {
+            background: #2d2d30;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #0e639c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #1177bb;
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        .filter-container {
+            display: flex;
+            flex: 1;
+            min-width: 300px;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #d4d4d4;
+            font-family: inherit;
+        }
+
+        .filter-input.regex-mode {
+            border-color: #9c27b0;
+        }
+
+        .filter-input.regex-error {
+            border-color: #f44336;
+        }
+
+        .filter-toggle {
+            padding: 8px 12px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #d4d4d4;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .filter-toggle:hover {
+            background: #4c4c4c;
+        }
+
+        .filter-toggle.active {
+            background: #9c27b0;
+            border-color: #9c27b0;
+            color: white;
+        }
+
+        .log-level-filters {
+            background: #2d2d30;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .log-level-filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .log-level-filters-header h3 {
+            color: #4ec9b0;
+            font-size: 14px;
+        }
+
+        .log-level-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .log-level-btn {
+            padding: 6px 12px;
+            background: #3c3c3c;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            text-transform: uppercase;
+            transition: all 0.15s;
+            opacity: 0.5;
+        }
+
+        .log-level-btn:hover {
+            opacity: 0.8;
+        }
+
+        .log-level-btn.active {
+            opacity: 1;
+        }
+
+        .log-level-btn.silly { color: #666; border-color: #666; }
+        .log-level-btn.silly.active { background: #666; color: #fff; }
+
+        .log-level-btn.verbose { color: #888; border-color: #888; }
+        .log-level-btn.verbose.active { background: #888; color: #fff; }
+
+        .log-level-btn.debug { color: #888; border-color: #888; }
+        .log-level-btn.debug.active { background: #888; color: #fff; }
+
+        .log-level-btn.log { color: #d4d4d4; border-color: #d4d4d4; }
+        .log-level-btn.log.active { background: #d4d4d4; color: #1e1e1e; }
+
+        .log-level-btn.info { color: #4ec9b0; border-color: #4ec9b0; }
+        .log-level-btn.info.active { background: #4ec9b0; color: #1e1e1e; }
+
+        .log-level-btn.success { color: #4caf50; border-color: #4caf50; }
+        .log-level-btn.success.active { background: #4caf50; color: #1e1e1e; }
+
+        .log-level-btn.warn { color: #ffa500; border-color: #ffa500; }
+        .log-level-btn.warn.active { background: #ffa500; color: #1e1e1e; }
+
+        .log-level-btn.error { color: #f44336; border-color: #f44336; }
+        .log-level-btn.error.active { background: #f44336; color: #fff; }
+
+        .log-level-btn.fatal { color: #d32f2f; border-color: #d32f2f; }
+        .log-level-btn.fatal.active { background: #d32f2f; color: #fff; }
+
+        .quick-select-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .quick-select-btns button {
+            padding: 4px 8px;
+            font-size: 11px;
+            background: #3c3c3c;
+        }
+
+        .quick-select-btns button:hover {
+            background: #555;
+        }
+
+        .file-selector-container {
+            background: #2d2d30;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .file-selector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .file-selector-header h3 {
+            color: #4ec9b0;
+            font-size: 14px;
+        }
+
+        .file-filter-input {
+            width: 100%;
+            padding: 8px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #d4d4d4;
+            font-family: inherit;
+            margin-bottom: 10px;
+        }
+
+        .file-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background: #1e1e1e;
+        }
+
+        .file-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            font-size: 13px;
+            transition: background-color 0.15s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item:hover {
+            background: #3c3c3c;
+        }
+
+        .file-item.selected {
+            background: #0e639c;
+            color: white;
+        }
+
+        .file-item .directory {
+            color: #858585;
+            font-size: 11px;
+        }
+
+        .file-item.selected .directory {
+            color: #ccc;
+        }
+
+        .file-item .file-name-part {
+            flex: 1;
+        }
+
+        .file-item .line-filter-btn {
+            padding: 2px 6px;
+            font-size: 10px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            color: #d4d4d4;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 8px;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .file-item:hover .line-filter-btn,
+        .file-item.selected .line-filter-btn {
+            opacity: 1;
+        }
+
+        .file-item .line-filter-btn:hover {
+            background: #555;
+        }
+
+        .file-item .line-filter-btn.active {
+            background: #ffa500;
+            color: #000;
+            border-color: #ffa500;
+        }
+
+        .sliders-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            background: #2d2d30;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-group label {
+            color: #4ec9b0;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .slider {
+            width: 150px;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: #3c3c3c;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #0e639c;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #0e639c;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            background: #3c3c3c;
+            padding: 4px 10px;
+            border-radius: 4px;
+            min-width: 60px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .logs-container {
+            background: #252526;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: calc(100vh - 580px);
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .log-entry {
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            border-left: 4px solid #555;
+            background: #1e1e1e;
+            font-size: 13px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .log-entry.new {
+            animation: fadeIn 0.1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                transform: translateX(10px);
+            }
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        .log-entry.silly { border-left-color: #666; }
+        .log-entry.verbose { border-left-color: #888; }
+        .log-entry.debug { border-left-color: #888; }
+        .log-entry.log { border-left-color: #d4d4d4; }
+        .log-entry.info { border-left-color: #4ec9b0; }
+        .log-entry.success { border-left-color: #4caf50; }
+        .log-entry.warn { border-left-color: #ffa500; }
+        .log-entry.error { border-left-color: #f44336; }
+        .log-entry.fatal { border-left-color: #d32f2f; }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .log-type {
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .log-type.silly { color: #666; }
+        .log-type.verbose { color: #888; }
+        .log-type.debug { color: #888; }
+        .log-type.log { color: #d4d4d4; }
+        .log-type.info { color: #4ec9b0; }
+        .log-type.success { color: #4caf50; }
+        .log-type.warn { color: #ffa500; }
+        .log-type.error { color: #f44336; }
+        .log-type.fatal { color: #d32f2f; }
+
+        .log-line {
+            color: #858585;
+            font-size: 11px;
+            font-style: italic;
+        }
+
+        .log-content {
+            margin-top: 4px;
+            white-space: pre-wrap;
+        }
+
+        .log-content .highlight {
+            background: #9c27b0;
+            color: #fff;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #858585;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            color: #858585;
+        }
+
+        .selected-files-info {
+            font-size: 12px;
+            color: #858585;
+            margin-top: 8px;
+        }
+
+        /* Disconnected overlay */
+        .disconnect-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .disconnect-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .disconnect-overlay .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .disconnect-overlay h2 {
+            color: #f44336;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .disconnect-overlay p {
+            color: #858585;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .disconnect-overlay .reconnect-info {
+            color: #ffa500;
+            font-size: 14px;
+        }
+
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: sticky;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0e639c;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            z-index: 100;
+            text-align: center;
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+        .scroll-indicator.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-indicator:hover {
+            background: #1177bb;
+        }
+
+        /* Line filter modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: #2d2d30;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h3 {
+            color: #4ec9b0;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .modal p {
+            color: #858585;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .line-ranges-container {
+            margin-bottom: 15px;
+        }
+
+        .line-range-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .line-range-row input {
+            width: 80px;
+            padding: 6px 8px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #d4d4d4;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .line-range-row input::placeholder {
+            color: #858585;
+        }
+
+        .line-range-row span {
+            color: #858585;
+        }
+
+        .line-range-row button {
+            padding: 4px 8px;
+            font-size: 12px;
+            background: #f44336;
+        }
+
+        .line-range-row button:hover {
+            background: #d32f2f;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+
+        .modal-buttons button.secondary {
+            background: #3c3c3c;
+        }
+
+        .modal-buttons button.secondary:hover {
+            background: #555;
+        }
+
+        .add-range-btn {
+            background: #4caf50;
+            margin-bottom: 10px;
+        }
+
+        .add-range-btn:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="disconnect-overlay" id="disconnectOverlay">
+        <div class="icon">&#x26A0;</div>
+        <h2>Connection Lost</h2>
+        <p>WebSocket disconnected from the server</p>
+        <div class="reconnect-info" id="reconnectInfo">Reconnecting in 3s...</div>
+    </div>
+
+    <div class="modal-overlay" id="lineFilterModal">
+        <div class="modal">
+            <h3 id="modalTitle">Line Filter for file.ts</h3>
+            <p>Specify line ranges to display logs only from those lines. Example: 11-20 will show logs from lines 11 to 20.</p>
+            <div class="line-ranges-container" id="lineRangesContainer"></div>
+            <button class="add-range-btn" id="addRangeBtn">+ Add Range</button>
+            <div class="modal-buttons">
+                <button class="secondary" id="cancelModalBtn">Cancel</button>
+                <button id="clearRangesBtn" style="background: #f44336;">Clear All</button>
+                <button id="saveRangesBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>LoggyLogger - Live Logs</h1>
+        <div class="status">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <span id="statusText">Disconnected</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="connectBtn">Connect</button>
+        <button id="disconnectBtn" disabled>Disconnect</button>
+        <button id="clearBtn">Clear</button>
+        <div class="filter-container">
+            <input type="text" class="filter-input" id="filterInput" placeholder="Search in log data...">
+            <button class="filter-toggle" id="regexToggle" title="Toggle regex mode">.*</button>
+        </div>
+        <div class="stats">
+            <span>Total: <strong id="totalCount">0</strong></span>
+            <span>Displayed: <strong id="visibleCount">0</strong></span>
+            <span>Buffer: <strong id="bufferInfo">1000</strong></span>
+        </div>
+    </div>
+
+    <div class="log-level-filters">
+        <div class="log-level-filters-header">
+            <h3>Log Levels</h3>
+            <div class="quick-select-btns">
+                <button id="selectAllLevels">All</button>
+                <button id="selectNoneLevels">None</button>
+                <button id="selectInfoAndAbove">Info+</button>
+            </div>
+        </div>
+        <div class="log-level-buttons" id="logLevelButtons">
+            <button class="log-level-btn silly" data-level="silly">Silly</button>
+            <button class="log-level-btn verbose" data-level="verbose">Verbose</button>
+            <button class="log-level-btn debug" data-level="debug">Debug</button>
+            <button class="log-level-btn log" data-level="log">Log</button>
+            <button class="log-level-btn info active" data-level="info">Info</button>
+            <button class="log-level-btn success active" data-level="success">Success</button>
+            <button class="log-level-btn warn active" data-level="warn">Warn</button>
+            <button class="log-level-btn error active" data-level="error">Error</button>
+            <button class="log-level-btn fatal active" data-level="fatal">Fatal</button>
+        </div>
+    </div>
+
+    <div class="file-selector-container">
+        <div class="file-selector-header">
+            <h3>Filter by files (select up to 10 for line filtering)</h3>
+            <button id="clearFilesBtn" style="padding: 4px 8px; font-size: 12px;">Clear selection</button>
+        </div>
+        <input type="text" class="file-filter-input" id="fileFilterInput" placeholder="Filter files...">
+        <div class="file-list" id="fileList">
+            <div class="empty-state" style="padding: 20px;">Loading files...</div>
+        </div>
+        <div class="selected-files-info" id="selectedFilesInfo">No files selected (showing all logs)</div>
+    </div>
+
+    <div class="sliders-container">
+        <div class="slider-group">
+            <label for="depthSlider">Object depth:</label>
+            <input type="range" class="slider" id="depthSlider" min="0" max="6" value="2">
+            <span class="slider-value" id="depthValue">2</span>
+        </div>
+        <div class="slider-group">
+            <label for="bufferSlider">Buffer size:</label>
+            <input type="range" class="slider" id="bufferSlider" min="0" max="5" value="2">
+            <span class="slider-value" id="bufferValue">1000</span>
+        </div>
+    </div>
+
+    <div class="logs-container" id="logsContainer">
+        <div class="empty-state">No logs received. Connect to WebSocket to start.</div>
+        <div class="scroll-indicator" id="scrollIndicator">New logs available - Click to scroll down</div>
+    </div>
+
+    <script>
+        let ws = null;
+        let logs = []; // [isNew(boolean), logData]
+        let searchFilter = '';
+        let isRegexMode = false;
+        let searchRegex = null;
+        let availableFiles = [];
+        let selectedFiles = new Set();
+        let fileFilter = '';
+        let objectDepth = 2;
+        let bufferSize = 1000;
+        let autoScroll = true;
+        let isConnected = false;
+        let reconnectAttempts = 0;
+        let reconnectTimer = null;
+        let manualDisconnect = false;
+        let lineFilters = {}; // { "file.ts": [[11, 20], [50, 60], [150, 198]] }
+        let currentEditingFile = null;
+        let enabledLogLevels = new Set(['info', 'success', 'warn', 'error', 'fatal']);
+
+        const LOG_LEVELS = ['silly', 'verbose', 'debug', 'log', 'info', 'success', 'warn', 'error', 'fatal'];
+        const BUFFER_PRESETS = [100, 500, 1000, 5000, 10000, 50000];
+        const MAX_RECONNECT_DELAY = 30000;
+        const BASE_RECONNECT_DELAY = 1000;
+
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const filterInput = document.getElementById('filterInput');
+        const regexToggle = document.getElementById('regexToggle');
+        const logsContainer = document.getElementById('logsContainer');
+        const totalCount = document.getElementById('totalCount');
+        const visibleCount = document.getElementById('visibleCount');
+        const bufferInfo = document.getElementById('bufferInfo');
+        const fileFilterInput = document.getElementById('fileFilterInput');
+        const fileList = document.getElementById('fileList');
+        const clearFilesBtn = document.getElementById('clearFilesBtn');
+        const selectedFilesInfo = document.getElementById('selectedFilesInfo');
+        const depthSlider = document.getElementById('depthSlider');
+        const depthValue = document.getElementById('depthValue');
+        const bufferSlider = document.getElementById('bufferSlider');
+        const bufferValue = document.getElementById('bufferValue');
+        const disconnectOverlay = document.getElementById('disconnectOverlay');
+        const reconnectInfo = document.getElementById('reconnectInfo');
+        const scrollIndicator = document.getElementById('scrollIndicator');
+        const lineFilterModal = document.getElementById('lineFilterModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const lineRangesContainer = document.getElementById('lineRangesContainer');
+        const addRangeBtn = document.getElementById('addRangeBtn');
+        const cancelModalBtn = document.getElementById('cancelModalBtn');
+        const clearRangesBtn = document.getElementById('clearRangesBtn');
+        const saveRangesBtn = document.getElementById('saveRangesBtn');
+        const logLevelButtons = document.getElementById('logLevelButtons');
+        const selectAllLevels = document.getElementById('selectAllLevels');
+        const selectNoneLevels = document.getElementById('selectNoneLevels');
+        const selectInfoAndAbove = document.getElementById('selectInfoAndAbove');
+
+        function updateStatus(connected) {
+            isConnected = connected;
+            if (connected) {
+                statusIndicator.classList.add('connected');
+                statusText.textContent = 'Connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                disconnectOverlay.classList.remove('visible');
+                reconnectAttempts = 0;
+            } else {
+                statusIndicator.classList.remove('connected');
+                statusText.textContent = 'Disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                if (!manualDisconnect) {
+                    disconnectOverlay.classList.add('visible');
+                }
+            }
+        }
+
+        function getReconnectDelay() {
+            const delay = Math.min(BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttempts), MAX_RECONNECT_DELAY);
+            return delay;
+        }
+
+        function scheduleReconnect() {
+            if (manualDisconnect) return;
+
+            const delay = getReconnectDelay();
+            let countdown = Math.ceil(delay / 1000);
+
+            reconnectInfo.textContent = `Reconnecting in ${countdown}s...`;
+
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    reconnectInfo.textContent = `Reconnecting in ${countdown}s...`;
+                } else {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+
+            reconnectTimer = setTimeout(() => {
+                clearInterval(countdownInterval);
+                reconnectInfo.textContent = 'Connecting...';
+                reconnectAttempts++;
+                connect();
+            }, delay);
+        }
+
+        function sortFiles(files) {
+            return files.slice().sort((a, b) => {
+                const aParts = a.split(/[/\\]/);
+                const bParts = b.split(/[/\\]/);
+
+                const minLen = Math.min(aParts.length, bParts.length);
+                for (let i = 0; i < minLen; i++) {
+                    const aIsLast = i === aParts.length - 1;
+                    const bIsLast = i === bParts.length - 1;
+
+                    if (!aIsLast && bIsLast) return -1;
+                    if (aIsLast && !bIsLast) return 1;
+
+                    const cmp = aParts[i].localeCompare(bParts[i], undefined, { sensitivity: 'base' });
+                    if (cmp !== 0) return cmp;
+                }
+
+                return aParts.length - bParts.length;
+            });
+        }
+
+        async function fetchLogFiles() {
+            try {
+                const response = await fetch('/api/logFiles');
+                if (response.ok) {
+                    const files = await response.json();
+                    availableFiles = sortFiles(files);
+                    renderFileList();
+                } else {
+                    fileList.innerHTML = '<div class="empty-state" style="padding: 20px;">Failed to load files</div>';
+                }
+            } catch (e) {
+                console.error('Error fetching log files:', e);
+                fileList.innerHTML = '<div class="empty-state" style="padding: 20px;">Error loading files</div>';
+            }
+        }
+
+        function openLineFilterModal(file) {
+            currentEditingFile = file;
+            const parts = file.split(/[/\\]/);
+            const fileName = parts.pop();
+            modalTitle.textContent = `Line Filter for ${fileName}`;
+
+            const ranges = lineFilters[file] || [];
+            renderLineRanges(ranges);
+
+            lineFilterModal.classList.add('visible');
+        }
+
+        function closeLineFilterModal() {
+            lineFilterModal.classList.remove('visible');
+            currentEditingFile = null;
+        }
+
+        function renderLineRanges(ranges) {
+            lineRangesContainer.innerHTML = '';
+
+            if (ranges.length === 0) {
+                ranges.push([null, null]);
+            }
+
+            ranges.forEach((range, index) => {
+                const row = document.createElement('div');
+                row.className = 'line-range-row';
+                row.innerHTML = `
+                    <span>Lines</span>
+                    <input type="number" placeholder="Start" value="${range[0] || ''}" data-index="${index}" data-type="start" min="1">
+                    <span>to</span>
+                    <input type="number" placeholder="End" value="${range[1] || ''}" data-index="${index}" data-type="end" min="1">
+                    <button type="button" data-index="${index}" class="remove-range-btn">X</button>
+                `;
+                lineRangesContainer.appendChild(row);
+            });
+
+            lineRangesContainer.querySelectorAll('.remove-range-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const rows = lineRangesContainer.querySelectorAll('.line-range-row');
+                    if (rows.length > 1) {
+                        rows[index].remove();
+                    }
+                });
+            });
+        }
+
+        function getModalRanges() {
+            const ranges = [];
+            const rows = lineRangesContainer.querySelectorAll('.line-range-row');
+            rows.forEach(row => {
+                const startInput = row.querySelector('input[data-type="start"]');
+                const endInput = row.querySelector('input[data-type="end"]');
+                const start = parseInt(startInput.value) || null;
+                const end = parseInt(endInput.value) || null;
+                if (start !== null && end !== null && start <= end) {
+                    ranges.push([start, end]);
+                }
+            });
+            return ranges;
+        }
+
+        addRangeBtn.addEventListener('click', () => {
+            const currentRanges = getModalRanges();
+            currentRanges.push([null, null]);
+            renderLineRanges(currentRanges);
+        });
+
+        cancelModalBtn.addEventListener('click', closeLineFilterModal);
+
+        clearRangesBtn.addEventListener('click', () => {
+            if (currentEditingFile) {
+                delete lineFilters[currentEditingFile];
+                renderFileList();
+                renderLogs();
+            }
+            closeLineFilterModal();
+        });
+
+        saveRangesBtn.addEventListener('click', () => {
+            if (currentEditingFile) {
+                const ranges = getModalRanges();
+                if (ranges.length > 0) {
+                    lineFilters[currentEditingFile] = ranges;
+                } else {
+                    delete lineFilters[currentEditingFile];
+                }
+                renderFileList();
+                renderLogs();
+            }
+            closeLineFilterModal();
+        });
+
+        lineFilterModal.addEventListener('click', (e) => {
+            if (e.target === lineFilterModal) {
+                closeLineFilterModal();
+            }
+        });
+
+        function renderFileList() {
+            const filtered = fileFilter
+                ? availableFiles.filter(f => f.toLowerCase().includes(fileFilter.toLowerCase()))
+                : availableFiles;
+
+            if (filtered.length === 0) {
+                fileList.innerHTML = '<div class="empty-state" style="padding: 20px;">No files match the filter</div>';
+                return;
+            }
+
+            fileList.innerHTML = '';
+            filtered.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'file-item' + (selectedFiles.has(file) ? ' selected' : '');
+
+                const parts = file.split(/[/\\]/);
+                const fileName = parts.pop();
+                const directory = parts.join('/');
+
+                const namePart = document.createElement('span');
+                namePart.className = 'file-name-part';
+                if (directory) {
+                    namePart.innerHTML = `<span class="directory">${directory}/</span>${fileName}`;
+                } else {
+                    namePart.textContent = fileName;
+                }
+
+                item.appendChild(namePart);
+
+                // Add line filter button if file is selected and within the 10 file limit
+                if (selectedFiles.has(file) && selectedFiles.size <= 10) {
+                    const lineBtn = document.createElement('button');
+                    lineBtn.className = 'line-filter-btn' + (lineFilters[file] ? ' active' : '');
+                    lineBtn.textContent = lineFilters[file] ? `Lines: ${lineFilters[file].length} range(s)` : 'Lines';
+                    lineBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openLineFilterModal(file);
+                    });
+                    item.appendChild(lineBtn);
+                }
+
+                item.addEventListener('click', () => {
+                    if (selectedFiles.has(file)) {
+                        selectedFiles.delete(file);
+                        delete lineFilters[file];
+                        item.classList.remove('selected');
+                    } else {
+                        selectedFiles.add(file);
+                        item.classList.add('selected');
+                    }
+                    updateSelectedFilesInfo();
+                    renderFileList();
+                    renderLogs();
+                });
+
+                fileList.appendChild(item);
+            });
+        }
+
+        function updateSelectedFilesInfo() {
+            const count = selectedFiles.size;
+            if (count === 0) {
+                selectedFilesInfo.textContent = 'No files selected (showing all logs)';
+            } else {
+                const lineFilterCount = Object.keys(lineFilters).length;
+                let text = `${count} file${count > 1 ? 's' : ''} selected`;
+                if (lineFilterCount > 0) {
+                    text += ` (${lineFilterCount} with line filters)`;
+                }
+                if (count <= 10) {
+                    text += ' - click "Lines" to filter by line ranges';
+                }
+                selectedFilesInfo.textContent = text;
+            }
+        }
+
+        function updateLogLevelButtons() {
+            const buttons = logLevelButtons.querySelectorAll('.log-level-btn');
+            buttons.forEach(btn => {
+                const level = btn.dataset.level;
+                if (enabledLogLevels.has(level)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function toggleLogLevel(level) {
+            if (enabledLogLevels.has(level)) {
+                enabledLogLevels.delete(level);
+            } else {
+                enabledLogLevels.add(level);
+            }
+            updateLogLevelButtons();
+            renderLogs();
+        }
+
+        logLevelButtons.addEventListener('click', (e) => {
+            const btn = e.target.closest('.log-level-btn');
+            if (btn) {
+                toggleLogLevel(btn.dataset.level);
+            }
+        });
+
+        selectAllLevels.addEventListener('click', () => {
+            enabledLogLevels = new Set(LOG_LEVELS);
+            updateLogLevelButtons();
+            renderLogs();
+        });
+
+        selectNoneLevels.addEventListener('click', () => {
+            enabledLogLevels.clear();
+            updateLogLevelButtons();
+            renderLogs();
+        });
+
+        selectInfoAndAbove.addEventListener('click', () => {
+            enabledLogLevels = new Set(['info', 'success', 'warn', 'error', 'fatal']);
+            updateLogLevelButtons();
+            renderLogs();
+        });
+
+        function updateSearchFilter() {
+            searchFilter = filterInput.value;
+            searchRegex = null;
+            filterInput.classList.remove('regex-error');
+
+            if (isRegexMode && searchFilter) {
+                try {
+                    searchRegex = new RegExp(searchFilter, 'gi');
+                    filterInput.classList.add('regex-mode');
+                } catch (e) {
+                    filterInput.classList.add('regex-error');
+                    searchRegex = null;
+                }
+            } else {
+                filterInput.classList.remove('regex-mode');
+            }
+
+            renderLogs();
+        }
+
+        regexToggle.addEventListener('click', () => {
+            isRegexMode = !isRegexMode;
+            regexToggle.classList.toggle('active', isRegexMode);
+            filterInput.placeholder = isRegexMode ? 'Search with regex...' : 'Search in log data...';
+            updateSearchFilter();
+        });
+
+        filterInput.addEventListener('input', updateSearchFilter);
+
+        function formatArgs(args, depth) {
+            if (!args || args.length === 0) return '';
+            return args.map(arg => {
+                if (typeof arg === 'object' && arg !== null) {
+                    try {
+                        return stringifyWithDepth(arg, depth);
+                    } catch (e) {
+                        return String(arg);
+                    }
+                }
+                return String(arg);
+            }).join(' ');
+        }
+
+        function stringifyWithDepth(obj, maxDepth, currentDepth = 0) {
+            if (obj === null) return 'null';
+            if (obj === undefined) return 'undefined';
+            if (typeof obj !== 'object') return JSON.stringify(obj);
+
+            if (currentDepth >= maxDepth) {
+                if (Array.isArray(obj)) {
+                    return `[Array(${obj.length})]`;
+                }
+                const keys = Object.keys(obj);
+                if (keys.length === 0) return '{}';
+                return `{${keys.join(', ')}}`;
+            }
+
+            if (Array.isArray(obj)) {
+                if (obj.length === 0) return '[]';
+                const items = obj.map(item => stringifyWithDepth(item, maxDepth, currentDepth + 1));
+                return '[\n' + items.map(item => '  '.repeat(currentDepth + 1) + item).join(',\n') + '\n' + '  '.repeat(currentDepth) + ']';
+            }
+
+            const keys = Object.keys(obj);
+            if (keys.length === 0) return '{}';
+            const items = keys.map(key => {
+                const value = stringifyWithDepth(obj[key], maxDepth, currentDepth + 1);
+                return '  '.repeat(currentDepth + 1) + JSON.stringify(key) + ': ' + value;
+            });
+            return '{\n' + items.join(',\n') + '\n' + '  '.repeat(currentDepth) + '}';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleString('fr-FR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    fractionalSecondDigits: 3
+                });
+            } catch (e) {
+                return dateString;
+            }
+        }
+
+        function getFileFromCallLine(callLine) {
+            if (!callLine) return null;
+            // Match file:line:column or file:line format
+            const match = callLine.match(/^(.+?):(\d+)(?::\d+)?$/);
+            return match ? match[1] : callLine;
+        }
+
+        function getLineFromCallLine(callLine) {
+            if (!callLine) return null;
+            // Match :line:column or :line at end of callLine
+            const match = callLine.match(/:(\d+)(?::\d+)?$/);
+            return match ? parseInt(match[1]) : null;
+        }
+
+        function isLineInRanges(line, ranges) {
+            if (!ranges || ranges.length === 0) return true;
+            return ranges.some(([start, end]) => line >= start && line <= end);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function highlightMatches(text, regex) {
+            if (!regex) return escapeHtml(text);
+
+            // Reset regex lastIndex
+            regex.lastIndex = 0;
+
+            const result = [];
+            let lastIndex = 0;
+            let match;
+
+            while ((match = regex.exec(text)) !== null) {
+                // Add text before match
+                if (match.index > lastIndex) {
+                    result.push(escapeHtml(text.slice(lastIndex, match.index)));
+                }
+                // Add highlighted match
+                result.push(`<span class="highlight">${escapeHtml(match[0])}</span>`);
+                lastIndex = regex.lastIndex;
+
+                // Prevent infinite loop for zero-length matches
+                if (match[0].length === 0) {
+                    regex.lastIndex++;
+                }
+            }
+
+            // Add remaining text
+            if (lastIndex < text.length) {
+                result.push(escapeHtml(text.slice(lastIndex)));
+            }
+
+            return result.join('');
+        }
+
+        function matchesSearch(logText) {
+            if (!searchFilter) return true;
+
+            if (isRegexMode && searchRegex) {
+                searchRegex.lastIndex = 0;
+                return searchRegex.test(logText);
+            } else {
+                return logText.toLowerCase().includes(searchFilter.toLowerCase());
+            }
+        }
+
+        function createLogEntry(log, isNew = false) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${log.type} ${isNew ? 'new' : ''}`;
+
+            const header = document.createElement('div');
+            header.className = 'log-header';
+
+            const leftSide = document.createElement('div');
+            leftSide.style.display = 'flex';
+            leftSide.style.gap = '10px';
+            leftSide.style.alignItems = 'center';
+
+            const typeSpan = document.createElement('span');
+            typeSpan.className = `log-type ${log.type}`;
+            typeSpan.textContent = log.type;
+
+            const dateSpan = document.createElement('span');
+            dateSpan.className = 'log-date';
+            dateSpan.textContent = log.date ? formatDate(log.date) : '';
+            dateSpan.style.color = '#858585';
+            dateSpan.style.fontSize = '11px';
+
+            leftSide.appendChild(typeSpan);
+            leftSide.appendChild(dateSpan);
+
+            const lineSpan = document.createElement('span');
+            lineSpan.className = 'log-line';
+            lineSpan.textContent = log.callLine || '';
+
+            header.appendChild(leftSide);
+            header.appendChild(lineSpan);
+
+            const content = document.createElement('div');
+            content.className = 'log-content';
+
+            const logText = formatArgs(log.argList, objectDepth);
+
+            // Highlight matches if we have a search filter
+            if (searchFilter && (isRegexMode ? searchRegex : true)) {
+                if (isRegexMode && searchRegex) {
+                    content.innerHTML = highlightMatches(logText, new RegExp(searchFilter, 'gi'));
+                } else if (searchFilter) {
+                    // Simple string highlight
+                    const regex = new RegExp(searchFilter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                    content.innerHTML = highlightMatches(logText, regex);
+                }
+            } else {
+                content.textContent = logText;
+            }
+
+            entry.appendChild(header);
+            entry.appendChild(content);
+
+            return entry;
+        }
+
+        function isAtBottom() {
+            const threshold = 50;
+            return logsContainer.scrollHeight - logsContainer.scrollTop - logsContainer.clientHeight < threshold;
+        }
+
+        function updateScrollIndicator() {
+            if (!autoScroll && logs.length > 0) {
+                scrollIndicator.classList.add('visible');
+            } else {
+                scrollIndicator.classList.remove('visible');
+            }
+        }
+
+        function scrollToBottom() {
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+            autoScroll = true;
+            updateScrollIndicator();
+        }
+
+        function renderLogs() {
+            const wasAtBottom = isAtBottom();
+            let filtered = logs;
+
+            // Filter by log level
+            filtered = filtered.filter(log => enabledLogLevels.has(log[1].type.toLowerCase()));
+
+            // Filter by search (string or regex)
+            if (searchFilter) {
+                filtered = filtered.filter(log => {
+                    const logText = formatArgs(log[1].argList, objectDepth);
+                    return matchesSearch(logText);
+                });
+            }
+
+            if (selectedFiles.size > 0) {
+                filtered = filtered.filter(log => {
+                    const file = getFileFromCallLine(log[1].callLine);
+                    if (!file || !selectedFiles.has(file)) return false;
+
+                    // Check line filter if exists for this file
+                    const ranges = lineFilters[file];
+                    if (ranges && ranges.length > 0) {
+                        const line = getLineFromCallLine(log[1].callLine);
+                        if (line === null) return false;
+                        return isLineInRanges(line, ranges);
+                    }
+                    return true;
+                });
+            }
+
+            if (filtered.length === 0 && logs.length === 0) {
+                logsContainer.innerHTML = '<div class="empty-state">No logs received. Connect to WebSocket to start.</div>';
+                logsContainer.appendChild(scrollIndicator);
+                totalCount.textContent = logs.length;
+                visibleCount.textContent = 0;
+                return;
+            }
+
+            if (filtered.length === 0) {
+                logsContainer.innerHTML = '<div class="empty-state">No logs match the filters.</div>';
+                logsContainer.appendChild(scrollIndicator);
+                totalCount.textContent = logs.length;
+                visibleCount.textContent = 0;
+                return;
+            }
+
+            logsContainer.innerHTML = '';
+            filtered.forEach(log => {
+                logsContainer.appendChild(createLogEntry(log[1], log[0]));
+                log[0] = false;
+            });
+            logsContainer.appendChild(scrollIndicator);
+
+            if (wasAtBottom && autoScroll) {
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+            }
+
+            totalCount.textContent = logs.length;
+            visibleCount.textContent = filtered.length;
+            updateScrollIndicator();
+        }
+
+        function addLog(logData) {
+            if (!logData.date) {
+                logData.date = new Date().toISOString();
+            }
+            logs.push([true, logData]);
+            while (logs.length > bufferSize) {
+                logs.shift();
+            }
+
+            const file = getFileFromCallLine(logData.callLine);
+            if (file && !availableFiles.includes(file)) {
+                availableFiles.push(file);
+                availableFiles = sortFiles(availableFiles);
+                renderFileList();
+            }
+
+            renderLogs();
+        }
+
+        function connect() {
+            if (ws && ws.readyState === WebSocket.OPEN) return;
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                updateStatus(true);
+                manualDisconnect = false;
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type && data.argList) {
+                        addLog({
+                            type: data.type,
+                            callLine: data.callLine || '',
+                            argList: data.argList,
+                            date: data.date || new Date().toISOString()
+                        });
+                    }
+                } catch (e) {
+                    console.error('JSON parsing error:', e);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                updateStatus(false);
+                ws = null;
+                if (!manualDisconnect) {
+                    scheduleReconnect();
+                }
+            };
+        }
+
+        function disconnect() {
+            manualDisconnect = true;
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            disconnectOverlay.classList.remove('visible');
+        }
+
+        function clearLogs() {
+            logs = [];
+            renderLogs();
+        }
+
+        connectBtn.addEventListener('click', () => {
+            manualDisconnect = false;
+            connect();
+        });
+        disconnectBtn.addEventListener('click', disconnect);
+        clearBtn.addEventListener('click', clearLogs);
+
+        fileFilterInput.addEventListener('input', (e) => {
+            fileFilter = e.target.value;
+            renderFileList();
+        });
+
+        clearFilesBtn.addEventListener('click', () => {
+            selectedFiles.clear();
+            lineFilters = {};
+            renderFileList();
+            updateSelectedFilesInfo();
+            renderLogs();
+        });
+
+        depthSlider.addEventListener('input', (e) => {
+            objectDepth = parseInt(e.target.value, 10);
+            depthValue.textContent = objectDepth;
+            renderLogs();
+        });
+
+        bufferSlider.addEventListener('input', (e) => {
+            const index = parseInt(e.target.value, 10);
+            bufferSize = BUFFER_PRESETS[index];
+            bufferValue.textContent = bufferSize.toLocaleString();
+            bufferInfo.textContent = bufferSize.toLocaleString();
+
+            // Trim logs if needed
+            while (logs.length > bufferSize) {
+                logs.shift();
+            }
+            renderLogs();
+        });
+
+        logsContainer.addEventListener('scroll', () => {
+            autoScroll = isAtBottom();
+            updateScrollIndicator();
+        });
+
+        scrollIndicator.addEventListener('click', scrollToBottom);
+
+        window.addEventListener('load', () => {
+            bufferValue.textContent = BUFFER_PRESETS[2].toLocaleString();
+            bufferInfo.textContent = BUFFER_PRESETS[2].toLocaleString();
+            fetchLogFiles();
+            setTimeout(connect, 500);
+        });
+    </script>
+</body>
+</html>
