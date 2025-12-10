@@ -41,7 +41,6 @@ class WebSocketManager {
         this._ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                console.log('Received message:', data);
                 try {
                     this._handleMessage(data);
                 } catch (e) {

@@ -202,7 +202,7 @@ class ChecksManager {
         if (execTime > this._killswitchThreshold) {
             check.killed = true;
             check.enabled = false;
-            Toast.warning(`Check "${check.name}" disabled: took ${execTime.toFixed(2)}ms (> ${this._killswitchThreshold}ms)`);
+            Toast.warning(`Check "${check.name}" disabled: took ${execTime.toFixed(4)}ms (> ${this._killswitchThreshold}ms)`);
             this._notifyChange();
         }
 

@@ -131,9 +131,6 @@ class LogRenderer {
      * @returns {string} - HTML with highlighting
      */
     applySyntaxHighlight(text) {
-        if (!this._syntaxHighlightEnabled) {
-            return DOM.escapeHtml(text);
-        }
 
         // Tokenize and highlight
         let result = '';
@@ -402,8 +399,8 @@ class LogRenderer {
             const { result, time } = ChecksManager.runCheck(check, log);
             const icon = DOM.create('span', {
                 className: `log-check-icon ${result ? 'pass' : 'fail'}`,
-                text: showTime ? time.toFixed(2) : String(check.id),
-                title: `${check.name}: ${result ? 'Pass' : 'Fail'}${showTime ? ` (${time.toFixed(2)}ms)` : ''}`
+                text: showTime ? time.toFixed(4) : String(check.id),
+                title: `${check.name}: ${result ? 'Pass' : 'Fail'}${showTime ? ` (${time.toFixed(4)}ms)` : ''}`
             });
             container.appendChild(icon);
         });
@@ -413,15 +410,17 @@ class LogRenderer {
      * Create log detail content
      * @param {Object} log - Log object
      * @param {boolean} showExecTime - Show execution time instead of PASS/FAIL
+     * @param {boolean} detailSyntaxHighlight - Override syntax highlighting for detail panel
      * @returns {string} - HTML content
      */
-    createDetailContent(log, showExecTime = true) {
+    createDetailContent(log, showExecTime = true, detailSyntaxHighlight = false) {
         const boundDatas = log.boundDatas || {};
         const enabledChecks = ChecksManager.getEnabled();
+        const useSyntax = detailSyntaxHighlight;
 
         let checksHtml = enabledChecks.map(check => {
             const { result, time } = ChecksManager.runCheck(check, log);
-            const display = showExecTime ? `${time.toFixed(2)}ms` : (result ? 'PASS' : 'FAIL');
+            const display = showExecTime ? `${time.toFixed(4)}ms` : (result ? 'PASS' : 'FAIL');
             return `<span class="log-check-icon ${result ? 'pass' : 'fail'}">${check.id}: ${DOM.escapeHtml(check.name)} - ${display}</span>`;
         }).join('');
 
@@ -448,17 +447,20 @@ class LogRenderer {
                 <h4>
                     Arguments (depth: 5)
                     <div class="copy-buttons">
+                        <button class="secondary" id="toggleDetailSyntax">${useSyntax ? 'Disable' : 'Enable'} Syntax Highlighting</button>
                         <button class="secondary" id="copyCompact">Copy Compact</button>
                         <button class="secondary" id="copyExtended">Copy Extended</button>
                     </div>
                 </h4>
-                <pre id="logArgsContent">${this._syntaxHighlightEnabled
+                <pre id="logArgsContent">${useSyntax
                     ? this.applySyntaxHighlight(this.formatArgs(log.argList, 5))
                     : DOM.escapeHtml(this.formatArgs(log.argList, 5))}</pre>
             </div>
             <div class="log-detail-section">
                 <h4>Bound Data</h4>
-                <pre>${DOM.escapeHtml(Object.keys(boundDatas).length > 0 ? this.stringifyWithDepth(boundDatas, 5) : '(empty)')}</pre>
+                <pre id="logBoundDataContent">${useSyntax
+                    ? this.applySyntaxHighlight(Object.keys(boundDatas).length > 0 ? this.stringifyWithDepth(boundDatas, 5) : '(empty)')
+                    : DOM.escapeHtml(Object.keys(boundDatas).length > 0 ? this.stringifyWithDepth(boundDatas, 5) : '(empty)')}</pre>
             </div>
             <div class="log-detail-section">
                 <h4>Check Results${showExecTime ? ' (execution time)' : ''}</h4>

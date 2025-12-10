@@ -163,6 +163,7 @@ class LoggyLoggerApp {
 
         DOM.on('scrollIndicator', 'click', () => this._scrollToBottom());
         DOM.on('backToLiveBtn', 'click', () => this._scrollToBottom());
+        DOM.on('reattachBottomBtn', 'click', () => this._scrollToBottom());
 
         // Add check button
         DOM.on('addCheckBtn', 'click', () => this._openCheckModal());
@@ -294,10 +295,10 @@ class LoggyLoggerApp {
         DOM.setText('logsPerMinuteReceived', stats.receivedPerMin);
         DOM.setText('logsPerSecondDisplayed', stats.displayedPerSec);
         DOM.setText('logsPerMinuteDisplayed', stats.displayedPerMin);
-        DOM.setText('avgRenderTime', stats.renderAvg.toFixed(2));
-        DOM.setText('avgChecksTime', stats.checksAvg.toFixed(2));
-        DOM.setText('lastRenderTime', stats.lastRender.toFixed(2));
-        DOM.setText('lastChecksTime', stats.lastChecks.toFixed(2));
+        DOM.setText('avgRenderTime', stats.renderAvg.toFixed(4));
+        DOM.setText('avgChecksTime', stats.checksAvg.toFixed(4));
+        DOM.setText('lastRenderTime', stats.lastRender.toFixed(4));
+        DOM.setText('lastChecksTime', stats.lastChecks.toFixed(4));
 
         // Update visible count
         const container = DOM.get('logsContainer');
@@ -317,10 +318,10 @@ class LoggyLoggerApp {
         }
 
         // Checks warning
-        if (warnings.renderSlow || warnings.checksSlow) {
+        if (warnings.checksSlow) {
             DOM.addClass('performanceWarning_recommendation_checks', 'visible');
             DOM.setText('performanceWarning_recommendation_checks_text',
-                `Avg render: ${stats.renderAvg.toFixed(2)}ms, Avg checks: ${stats.checksAvg.toFixed(2)}ms`);
+                `Avg render: ${stats.renderAvg.toFixed(4)}ms, Avg checks: ${stats.checksAvg.toFixed(4)}ms`);
         } else {
             DOM.removeClass('performanceWarning_recommendation_checks', 'visible');
         }
@@ -479,12 +480,20 @@ class LoggyLoggerApp {
             html: '<span class="live-dot"></span>Back to Live'
         });
 
+        const reattachBtn = DOM.create('button', {
+            className: 'reattach-bottom-btn',
+            id: 'reattachBottomBtn',
+            html: '<span class="live-dot"></span>Reattach to bottom for live logs'
+        });
+
         container.appendChild(backBtn);
         container.appendChild(scrollIndicator);
+        container.appendChild(reattachBtn);
 
         // Re-attach listeners
         scrollIndicator.addEventListener('click', () => this._scrollToBottom());
         backBtn.addEventListener('click', () => this._scrollToBottom());
+        reattachBtn.addEventListener('click', () => this._scrollToBottom());
 
         this._logElements.clear();
 
@@ -580,9 +589,11 @@ class LoggyLoggerApp {
         if (!this._autoScroll && this._logs.length > 0) {
             DOM.addClass('scrollIndicator', 'visible');
             DOM.addClass('backToLiveBtn', 'visible');
+            DOM.addClass('reattachBottomBtn', 'visible');
         } else {
             DOM.removeClass('scrollIndicator', 'visible');
             DOM.removeClass('backToLiveBtn', 'visible');
+            DOM.removeClass('reattachBottomBtn', 'visible');
         }
     }
 
@@ -795,21 +806,26 @@ class LoggyLoggerApp {
             if (this._checksStatsMode !== 'disabled') {
                 if (stats.sampleCount > 0) {
                     const timeSpanStr = stats.timeSpanSeconds > 0 ? `/${stats.timeSpanSeconds}s` : '';
-                    avgTimingHtml = `avg: ${stats.avg.toFixed(2)}ms (${stats.sampleCount}${timeSpanStr})`;
-                    lastTimingHtml = stats.last > 0 ? `last: ${stats.last.toFixed(2)}ms` : 'last: N/A';
+                    avgTimingHtml = `avg: ${stats.avg.toFixed(4)}ms (${stats.sampleCount}${timeSpanStr})`;
+                    lastTimingHtml = `last: ${stats.last.toFixed(4)}ms`;
                 } else {
                     avgTimingHtml = 'avg: N/A';
                     lastTimingHtml = 'last: N/A';
                 }
             }
 
+            // Truncate name to 50 chars for display
+            const displayName = check.name.length > 50 ? check.name.slice(0, 47) + '...' : check.name;
+
             item.innerHTML = `
                 <input type="checkbox" ${check.enabled ? 'checked' : ''} ${check.killed ? 'disabled' : ''} data-id="${check.id}">
                 <span class="check-name" title="${DOM.escapeHtml(check.name)}${check.killed ? ' (KILLED)' : ''}">
-                    ${check.id}: ${DOM.escapeHtml(check.name)}
-                    <span class="check-avg-time" data-check-avg="${check.id}">${avgTimingHtml}</span>
-                    <span class="check-last-time" data-check-last="${check.id}">${lastTimingHtml}</span>
-                    ${check.killed ? '<span class="check-killed">[KILLED]</span>' : ''}
+                    <span class="check-name-text">${check.id}: ${DOM.escapeHtml(displayName)}</span>
+                    <span class="check-stats">
+                        <span class="check-avg-time" data-check-avg="${check.id}">${avgTimingHtml}</span>
+                        <span class="check-last-time" data-check-last="${check.id}">${lastTimingHtml}</span>
+                        ${check.killed ? '<span class="check-killed">[KILLED]</span>' : ''}
+                    </span>
                 </span>
                 <div class="check-actions">
                     <button class="secondary edit-check" data-id="${check.id}">Edit</button>
@@ -860,8 +876,8 @@ class LoggyLoggerApp {
 
             if (stats.sampleCount > 0) {
                 const timeSpanStr = stats.timeSpanSeconds > 0 ? `/${stats.timeSpanSeconds}s` : '';
-                avgSpan.textContent = `avg: ${stats.avg.toFixed(2)}ms (${stats.sampleCount}${timeSpanStr})`;
-                lastSpan.textContent = stats.last > 0 ? `last: ${stats.last.toFixed(2)}ms` : 'last: N/A';
+                avgSpan.textContent = `avg: ${stats.avg.toFixed(4)}ms (${stats.sampleCount}${timeSpanStr})`;
+                lastSpan.textContent = `last: ${stats.last.toFixed(4)}ms`;
             } else {
                 avgSpan.textContent = 'avg: N/A';
                 lastSpan.textContent = 'last: N/A';
@@ -972,23 +988,36 @@ class LoggyLoggerApp {
     }
 
     // Log detail
+    _detailSyntaxHighlight = false; // Independent state for detail panel, starts disabled
+
     _openLogDetail(log) {
         this._currentDetailLog = log;
+        this._renderLogDetailContent(log);
+        DOM.addClass('logDetailOverlay', 'visible');
+    }
+
+    _renderLogDetailContent(log) {
         const content = DOM.get('logDetailContent');
-        content.innerHTML = LogRenderer.createDetailContent(log, true); // Show execution time
+        console.log('Rendering log detail content with highlight:', this._detailSyntaxHighlight);
+        content.innerHTML = LogRenderer.createDetailContent(log, true, this._detailSyntaxHighlight);
 
         // Add copy button handlers
-        DOM.get('copyCompact').addEventListener('click', () => {
+        DOM.get('copyCompact', true).addEventListener('click', () => {
             navigator.clipboard.writeText(JSON.stringify(log.argList));
             Toast.success('Copied compact JSON');
         });
 
-        DOM.get('copyExtended').addEventListener('click', () => {
+        DOM.get('copyExtended', true).addEventListener('click', () => {
             navigator.clipboard.writeText(JSON.stringify(log.argList, null, 2));
             Toast.success('Copied extended JSON');
         });
 
-        DOM.addClass('logDetailOverlay', 'visible');
+        // Add syntax highlight toggle handler
+        DOM.get('toggleDetailSyntax', true).addEventListener('click', () => {
+            console.log('Toggle syntax highlight');
+            this._detailSyntaxHighlight = !this._detailSyntaxHighlight;
+            this._renderLogDetailContent(log);
+        });
     }
 
     _closeLogDetail() {

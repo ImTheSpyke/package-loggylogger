@@ -893,32 +893,50 @@
 
         .check-item .check-name {
             flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .check-item .check-name-text {
+            max-width: 50ch;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            flex-shrink: 1;
+            min-width: 0;
+        }
+
+        .check-item .check-stats {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+            margin-left: auto;
         }
 
         .check-item .check-avg-time {
             color: #858585;
             font-size: 9px;
-            margin-left: 4px;
+            white-space: nowrap;
         }
 
         .check-item .check-last-time {
             color: #4ec9b0;
             font-size: 9px;
-            margin-left: 2px;
+            white-space: nowrap;
         }
 
         .check-item .check-killed {
             color: #f44336;
             font-size: 9px;
-            margin-left: 4px;
+            white-space: nowrap;
         }
 
         .check-item .check-actions {
             display: flex;
             gap: 4px;
+            flex-shrink: 0;
         }
 
         .check-item button {
@@ -1275,6 +1293,44 @@
             animation: pulse 1.5s infinite;
         }
 
+        /* Reattach to bottom button */
+        .reattach-bottom-btn {
+            position: sticky;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 100;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            margin: 10px auto;
+            width: fit-content;
+        }
+
+        .reattach-bottom-btn.visible {
+            display: flex;
+        }
+
+        .reattach-bottom-btn:hover {
+            background: #45a049;
+        }
+
+        .reattach-bottom-btn .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
         /* Syntax highlighting colors */
         .syntax-string {
             color: #ce9178;
@@ -1318,6 +1374,74 @@
             width: 14px;
             height: 14px;
             cursor: pointer;
+        }
+
+        /* Custom scrollbar styling - Cross-browser compatible */
+        /* Webkit browsers (Chrome, Safari, Edge) */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+            border-radius: 5px;
+            border: 2px solid #1e1e1e;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+        }
+
+        ::-webkit-scrollbar-thumb:active {
+            background: linear-gradient(180deg, #0e639c 0%, #1177bb 100%);
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: #1e1e1e;
+        }
+
+        /* Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #4a4a4a #1e1e1e;
+        }
+
+        /* Specific styling for logs container scrollbar */
+        .logs-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #4ec9b0 0%, #3da890 100%);
+            border: 2px solid #1e1e1e;
+        }
+
+        .logs-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #5fd9c0 0%, #4ec9b0 100%);
+        }
+
+        .logs-container {
+            scrollbar-color: #4ec9b0 #1e1e1e;
+        }
+
+        /* Settings panel scrollbar */
+        .settings-panel::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #0e639c 0%, #1177bb 100%);
+            border: 2px solid #252526;
+        }
+
+        .settings-panel::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #1177bb 0%, #2288cc 100%);
+        }
+
+        .settings-panel::-webkit-scrollbar-track {
+            background: #252526;
+        }
+
+        .settings-panel {
+            scrollbar-color: #0e639c #252526;
         }
     </style>
 </head>
@@ -1458,6 +1582,10 @@ return true;"></textarea>
                 </button>
                 <div class="empty-state">No logs received. Connect to WebSocket to start.</div>
                 <div class="scroll-indicator" id="scrollIndicator">New logs - Click to scroll down</div>
+                <button class="reattach-bottom-btn" id="reattachBottomBtn">
+                    <span class="live-dot"></span>
+                    Reattach to bottom for live logs
+                </button>
             </div>
         </div>
 

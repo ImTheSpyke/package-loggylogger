@@ -13,8 +13,8 @@ class DOMManager {
      * @param {string} id - Element ID
      * @returns {HTMLElement|null}
      */
-    get(id) {
-        if (!this._cache.has(id)) {
+    get(id, force = false) {
+        if (!this._cache.has(id) || force == true) {
             const el = document.getElementById(id);
             if (el) this._cache.set(id, el);
             return el;
