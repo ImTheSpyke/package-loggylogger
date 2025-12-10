@@ -137,3 +137,5 @@ dist
 package-lock.json
 
 .env
+AGENTS.md
+TODO.md
