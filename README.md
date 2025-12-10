@@ -1,107 +1,187 @@
-# LoggyLogger 🚀
+# 🚀 LoggyLogger
 
-LoggyLogger is a next-gen, plug-and-play logging system for Node.js that empowers developers with real-time telemetry and a production-optimized build. Say goodbye to tedious console.log statements and hello to a professional-grade dashboard with live log viewing, searching, filtering, recording and much more.
+**Zero-config logging that scales from lightweight production to powerful debugging.**
 
+LoggyLogger is a standalone, plug-and-play logging system for Node.js. No external APIs, no cloud services, no complex setup. Just import and log.
 
-## ✨ Features
-- 🔌 **Runtime control:** Flip log levels, object depth, and more without restarting.
-- 🗂️ **Smart outputs:** Gather all the datas, filter to your needs with custom checking functions.
-- 🖥️ **Live web dashboard:** Real‑time view of logs with level filters, file&line scoping, regex search and more.
-- 🛡️ **Production mode:** Tunable minimal footprint while preserving essential telemetry.
-- 🧭 **Rich context:** Object pretty‑printing, colorized output.
-- 🧩 **Flexible API:** Simple factory, global config, and granular per-file/calls overrides.
+## Why LoggyLogger?
 
-## 📦 Install
+- 🚀 **Instant setup** - Import, create logger, done. Works out of the box.
+- 🏠 **Standalone** - Lives entirely in your project. No external dependencies or services.
+- ⚡ **Production mode** - Flip a switch to disable all heavy features. Minimal footprint when you need performance.
+- 🧪 **Debug mode** - Deep object inspection, call stack tracing, colorized output, and a live web dashboard when you need to hunt bugs.
+
+## Somes images
+Full loggin dashboard
+<br><img src="./github_assets/example1.png" height="200px" /><br>
+Custom code snippet checks
+<br><img src="./github_assets/example_check_add.png" height="200px" /><br>
+Filter out logs by file and line range
+<br><img src="./github_assets/example_file_filtering.png" height="200px" /><br>
+
+## Install
+
 ```bash
-npm install @imthespyke/loggylogger
+npm install loggylogger
 ```
 
-## 🚀 Quick start
-```ts
-import Loggy from '@imthespyke/loggylogger'
+## Basic Usage
 
-// Create a logger (uses global config by default)
+```ts
+import Loggy from 'loggylogger'
+
+// Create a logger - that's it
 const logger = Loggy.createLogger()
 
-logger.info('Server starting…')
+// Start logging
+logger.info('Server started')
 logger.warn('Cache miss', { userId: 42 })
-logger.error('Unhandled exception', new Error('boom'))
+logger.error('Connection failed', new Error('timeout'))
+logger.debug('Request payload', requestData)
 ```
 
-## ⚙️ Configuration
-`Loggy.globalConfig` holds defaults for every instance. Override globally or per instance:
+## Production Mode
+
+Switch to a lightweight logger with a single toggle. All heavy features disabled automatically:
 
 ```ts
-// Global tweak (affects future instances)
-Loggy.globalConfig.setLevel(Loggy.LEVELS['7_DEBUG'])
-Loggy.globalConfig.toggleColors(true)
+import Loggy from 'loggylogger'
 
-// Per-instance customization
-const prodLogger = Loggy.createLogger(
-  {
+// Enable production mode - strips colors, emojis, object inspection, call lines
+Loggy.toggleProductionMode(true)
+
+const logger = Loggy.createLogger()
+
+// Now logs are minimal and fast
+logger.info('User logged in')  // Clean, lightweight output
+logger.error('Payment failed') // Only essential info
+```
+
+Production mode automatically:
+- Disables colors and emojis
+- Turns off object deep inspection
+- Removes call line tracking
+- Sets level to FATAL only (configurable)
+
+## Debug Mode (Default)
+
+When you need to dig deep, LoggyLogger gives you everything:
+
+```ts
+import Loggy from 'loggylogger'
+
+// Configure for maximum debug output
+Loggy.setGlobalLoggerConfig({
+    level: Loggy.LEVELS['8_VERBOSE'],      // Show all log levels >= Verbose
+    colors: true,                           // Colorized output
+    emojis: true,                           // Visual indicators
+    showCallLines: true,                    // File:line for each log
+    convertObjects: true,                   // Deep object inspection
+    convertObjectsColorized: true,          // Colorized objects
+    convertObjectsDepth: 4,                 // Inspect nested objects
+})
+
+const logger = Loggy.createLogger()
+
+// Full debug power
+logger.verbose('Entering function', { args: [1, 2, 3] })
+logger.debug('Cache state', complexCacheObject)
+logger.info('Processing request', req.body)
+```
+
+## Log Levels
+
+9 levels from critical to verbose:
+
+```ts
+logger.fatal('System crash')        // Level 10 - Highest
+logger.error('Operation failed')    // Level 20
+logger.warn('Deprecation notice')   // Level 30
+logger.success('Task completed')    // Level 40
+logger.info('Status update')        // Level 50
+logger.log('General message')       // Level 60 (default threshold)
+logger.debug('Debug lines')         // Level 70
+logger.verbose('Detailed trace')    // Level 80
+logger.silly('Stupid precise data') // Level 90
+// Level 90 - SILLY (most verbose)
+```
+
+Set the threshold:
+
+```ts
+// Global - affects all loggers unless overwritten
+Loggy.setGlobalLoggerConfig({ level: Loggy.LEVELS['7_DEBUG'] })
+
+// Per-instance (overwrite global config)
+const verboseLogger = Loggy.createLogger({ level: Loggy.LEVELS['8_VERBOSE'] })
+```
+
+## Configuration
+
+### Global Config
+
+Affects all loggers created after the change:
+
+```ts
+import Loggy from 'loggylogger'
+
+Loggy.setGlobalLoggerConfig({
     level: Loggy.LEVELS['5_INFO'],
-    colors: false,
-    emojis: false,
+    colors: true,
+    emojis: true,
     showCallLines: false,
     cleanDate: true,
-    convertObjects: true,
-    convertObjectsColorized: false,
-    convertObjectsDepth: 1,
-  },
-  false // set to true to force using the current global config
-)
-
-// Instance-level config changes
-prodLogger.config.setLevel(Loggy.LEVELS['3_WARN'])
+    convertObjects: false,
+    convertObjectsColorized: true,
+    convertObjectsDepth: 2,
+})
 ```
 
-**Note:** Configuration is validated - invalid values (e.g., negative levels, non-boolean flags) will throw errors.
+### Per-Instance Config
 
-### Common settings
-- `level`: Minimum level to emit (`Loggy.LEVELS` from `1_FATAL` to `9_SILLY`).
-- `colors` / `emojis`: Toggle visual helpers.
-- `showCallLines`: Include caller info.
-- `cleanDate`: Shortened timestamps.
-- `convertObjects*`: Control pretty‑printing depth and color.
+Override global settings for specific loggers:
 
-## 🌐 Remote & live control
-- **Remote runtime switches:** Wire `Loggy.globalConfig` updates to your control plane (e.g., fetch from an API or feature flag) and call `logger.reloadConfig()` on long‑lived instances to apply.
-- **Web dashboard:** Stream logs to a lightweight web UI for real‑time filtering by level/file and quick drill‑downs.
-
-## 🗄️ File logging
-- Target specific files or modules to also write to a rotating logfile while keeping console output clean.
-- Combine with production mode to persist only actionable events.
-
-## 🏎️ Production mode
-- Strip colors/emojis, minimize object conversions, and drop to the minimal level needed.
-- Keep critical metadata (timestamp, level, file, message) so postmortems stay actionable.
-
-## 🧭 API overview
-- `Loggy.createLogger(config?, useGlobalConfig?)` → new logger instance.
-- `Loggy.globalConfig` → shared defaults API (`setLevel`, `getLevel`, `toggleColors`, `set`).
-- `Loggy.LEVELS` → level map for quick thresholds.
-- Instance methods: `verbose`, `debug`, `log`, `info`, `success`, `warn`, `error`, `fatal`.
-- Instance config: `logger.config.setLevel()`, `logger.config.getLevel()`, `logger.config.toggleColors()`.
-- Utility: `logger.reloadConfig()` to re‑sync with `globalConfig` after remote updates.
-
-### TypeScript Support
-Full TypeScript support with exported types:
 ```ts
-import Loggy, { LoggyLogger, TLoggyConfig, TLoggyConfigOptional } from '@imthespyke/loggylogger'
+// Quiet logger for noisy modules
+const quietLogger = Loggy.createLogger({
+    level: Loggy.LEVELS['3_WARN'],
+    colors: false,
+})
+
+// Verbose logger for debugging specific code
+const debugLogger = Loggy.createLogger({
+    level: Loggy.LEVELS['8_VERBOSE'],
+    showCallLines: true,
+    convertObjects: true,
+    convertObjectsDepth: 5,
+})
 ```
 
-## 📜 Scripts
-- `npm run build` – Build ESM, CJS, and type declarations via `tsup`.
-- `npm start` – Run the built entry.
-- `npm test` – Run tests in watch mode.
-- `npm run test:run` – Run tests once.
-- `npm run test:ui` – Run tests with UI interface.
+## Configuration Options
 
-## 🛣️ Roadmap
-- Fine‑grained per‑file routing rules.
-- Built‑in web dashboard bundle and event stream endpoint.
-- Remote configuration helpers (HTTP + WS) out of the box.
-- Structured log export adapters (JSONL, OpenTelemetry, SIEM).
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `level` | number | 60 | Log level threshold (use `Loggy.LEVELS`) |
+| `colors` | boolean | true | Enables ANSI colors in output |
+| `emojis` | boolean | true | Emoji indicators |
+| `showCallLines` | boolean | false | Show file:line for each log |
+| `cleanDate` | boolean | true | Clean timestamp format |
+| `convertObjects` | boolean | false | Deep inspect objects with `util.inspect` |
+| `convertObjectsColorized` | boolean | true | Colorize inspected objects |
+| `convertObjectsDepth` | number | 2 | Depth for object inspection |
 
-## 🪪 License
-ISC © ImTheSpyke
+## Available Levels
+
+```ts
+Loggy.LEVELS = {
+    '1_FATAL': 10,
+    '2_ERROR': 20,
+    '3_WARN': 30,
+    '4_SUCCESS': 40,
+    '5_INFO': 50,
+    '6_LOG': 60,      // DEFAULT
+    '7_DEBUG': 70,
+    '8_VERBOSE': 80,
+    '9_SILLY': 90,
+}
+```
