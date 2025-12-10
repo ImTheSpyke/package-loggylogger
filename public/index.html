@@ -39,6 +39,23 @@
             border-left: 1px solid #3c3c3c;
             overflow-y: auto;
             padding: 10px;
+            position: relative;
+        }
+
+        /* Resize handle */
+        .resize-handle {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            cursor: ew-resize;
+            background: transparent;
+            z-index: 100;
+        }
+
+        .resize-handle:hover {
+            background: #0e639c;
         }
 
         .settings-section {
@@ -126,9 +143,11 @@
             background: #555;
             cursor: not-allowed;
         }
+
         button.recording {
             background: #f44336 !important;
         }
+
         button#recordBtn {
             background: #4caf50;
         }
@@ -160,6 +179,15 @@
 
         button.secondary:hover {
             background: #555;
+        }
+
+        button.warning {
+            background: #ffa500;
+            color: #000;
+        }
+
+        button.warning:hover {
+            background: #cc8400;
         }
 
         .filter-container {
@@ -427,7 +455,6 @@
             max-width: 300px;
         }
 
-        /* Display mode toggle */
         .display-mode-toggle {
             display: flex;
             gap: 4px;
@@ -543,7 +570,6 @@
             border: 1px solid #3c3c3c;
             border-top: none;
             overflow-x: hidden;
-            overflow-y: auto;
         }
 
         .log-entry {
@@ -872,6 +898,24 @@
             white-space: nowrap;
         }
 
+        .check-item .check-avg-time {
+            color: #858585;
+            font-size: 9px;
+            margin-left: 4px;
+        }
+
+        .check-item .check-last-time {
+            color: #4ec9b0;
+            font-size: 9px;
+            margin-left: 2px;
+        }
+
+        .check-item .check-killed {
+            color: #f44336;
+            font-size: 9px;
+            margin-left: 4px;
+        }
+
         .check-item .check-actions {
             display: flex;
             gap: 4px;
@@ -880,6 +924,11 @@
         .check-item button {
             padding: 2px 6px;
             font-size: 10px;
+        }
+
+        .checks-header-actions {
+            display: flex;
+            gap: 4px;
         }
 
         .add-check-btn {
@@ -1071,22 +1120,78 @@
             padding: 4px 10px;
         }
 
-        .toast {
+        /* Toast container */
+        .toast-container {
             position: fixed;
             bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #4caf50;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 4px;
-            font-size: 13px;
+            right: 20px;
             z-index: 20000;
-            opacity: 0;
-            transition: opacity 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .toast.visible {
+        .toast {
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 250px;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.toast-visible {
+            transform: translateX(0);
+        }
+
+        .toast.toast-hiding {
+            transform: translateX(120%);
+        }
+
+        .toast-success {
+            background: #2e7d32;
+            color: #fff;
+        }
+
+        .toast-error {
+            background: #c62828;
+            color: #fff;
+        }
+
+        .toast-warning {
+            background: #f57c00;
+            color: #fff;
+        }
+
+        .toast-info {
+            background: #1565c0;
+            color: #fff;
+        }
+
+        .toast-icon {
+            font-size: 16px;
+        }
+
+        .toast-message {
+            flex: 1;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            opacity: 0.7;
+        }
+
+        .toast-close:hover {
             opacity: 1;
         }
 
@@ -1100,6 +1205,7 @@
             gap: 20px;
             font-size: 11px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .stat-group {
@@ -1128,43 +1234,11 @@
             font-size: 11px;
             align-items: center;
             gap: 8px;
-            transition: all 1s;
-        }
-
-        .performance-warning.visible {
-            animation: appear 0.3s forwards;
-        }
-
-        .performance-warning:not(.visible) {
-            animation: disappear 1s forwards;
-            opacity: 0;
             display: none;
         }
 
-        @keyframes appear {
-            from {
-                opacity: 0;
-                display: none;
-                transform: scale(0.8);
-            }
-            to {
-                opacity: 1;
-                display: flex;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes disappear {
-            from {
-                opacity: 1;
-                display: flex;
-                transform: scale(1);
-            }
-            to {
-                opacity: 0;
-                display: none;
-                transform: scale(0.8);
-            }
+        .performance-warning.visible {
+            display: flex;
         }
 
         /* Back to live button */
@@ -1200,6 +1274,51 @@
             border-radius: 50%;
             animation: pulse 1.5s infinite;
         }
+
+        /* Syntax highlighting colors */
+        .syntax-string {
+            color: #ce9178;
+        }
+
+        .syntax-number {
+            color: #b5cea8;
+        }
+
+        .syntax-boolean {
+            color: #569cd6;
+        }
+
+        .syntax-null {
+            color: #569cd6;
+        }
+
+        .syntax-key {
+            color: #9cdcfe;
+        }
+
+        .syntax-bracket {
+            color: #ffd700;
+        }
+
+        /* Settings toggle */
+        .setting-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .setting-toggle label {
+            color: #858585;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .setting-toggle input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -1233,7 +1352,8 @@
             <div class="check-params">
                 <strong>Function parameters:</strong><br>
                 <code>date</code>: Date, <code>type</code>: string, <code>callLine</code>: string, <code>argList</code>: any[], <code>boundDatas</code>: object<br>
-                <strong>Must return:</strong> boolean
+                <strong>Must return:</strong> boolean<br>
+                <strong>Note:</strong> Checks taking >25ms will be automatically disabled (killswitch).
             </div>
             <textarea id="checkCodeInput" placeholder="// Write your check logic here
 // Example: return argList.some(arg => typeof arg === 'object' && arg?.error);
@@ -1253,9 +1373,6 @@ return true;"></textarea>
         </div>
         <div class="log-detail-content" id="logDetailContent"></div>
     </div>
-
-    <!-- Toast notification -->
-    <div class="toast" id="toast"></div>
 
     <div class="main-layout">
         <!-- Logs panel (left, takes majority of space) -->
@@ -1303,18 +1420,32 @@ return true;"></textarea>
                     <span class="stat-value" id="logsPerSecondDisplayed">0</span><span class="stat-label">/s</span>
                     <span class="stat-value" id="logsPerMinuteDisplayed">0</span><span class="stat-label">/m</span>
                 </div>
+                <div class="stat-group">
+                    <span class="stat-label">Roadtrip:</span>
+                    <span class="stat-value" id="lastRoadtripDelay">-</span>
+                </div>
+                <div class="stat-group">
+                    <span class="stat-label">Avg Render:</span>
+                    <span class="stat-value" id="avgRenderTime">0</span><span class="stat-label">ms</span>
+                    <span class="stat-label">(<span class="stat-value" id="avgChecksTime">0</span>ms checks)</span>
+                </div>
+                <div class="stat-group">
+                    <span class="stat-label">Last:</span>
+                    <span class="stat-value" id="lastRenderTime">0</span><span class="stat-label">ms</span>
+                    <span class="stat-label">(<span class="stat-value" id="lastChecksTime">0</span>ms checks)</span>
+                </div>
             </div>
 
             <div class="performance-warning" id="performanceWarning">
-                <span class="warning-icon">🆘</span>
+                <span class="warning-icon">&#x1F198;</span>
                 <span class="warning-text">Page can't keep up with incoming logs. Consider disabling checks or some filters. Running <span class="warning-amount" id="performanceWarningAmount"></span> ms behind. (Last ping <span class="warning-amount" id="performanceWarningPing"></span> s ago)</span>
             </div>
             <div class="performance-warning" id="performanceWarning_recommendation_checks">
-                <span class="warning-icon">⚠️</span>
+                <span class="warning-icon">&#x26A0;</span>
                 <span class="warning-text"><b>Warning: Your checks are too heavy to execute.</b><br>Please consider lowering buffer, disabling some checks or refactoring your code to run faster.<br>Remember that checks must be ultra-optimized snippets. (<span class="warning-amount" id="performanceWarning_recommendation_checks_text"></span>)</span>
             </div>
             <div class="performance-warning" id="performanceWarning_recommendation_display">
-                <span class="warning-icon">ℹ️</span>
+                <span class="warning-icon">&#x2139;</span>
                 <span class="warning-text">
                     <b>Warning: High log display amount detected.</b> This might cause lag.<br>Please consider lowering depth or buffer size, or disable some log levels to improve performance.
                 </span>
@@ -1331,7 +1462,7 @@ return true;"></textarea>
         </div>
 
         <!-- Settings panel (right, compact) -->
-        <div class="settings-panel">
+        <div class="settings-panel" id="settingsPanel">
             <div class="settings-section">
                 <h3>
                     Log Levels
@@ -1378,12 +1509,19 @@ return true;"></textarea>
                     <input type="range" class="slider" id="bufferSlider" min="0" max="5" value="2">
                     <span class="slider-value" id="bufferValue">1000</span>
                 </div>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="syntaxHighlightToggle">
+                    <label for="syntaxHighlightToggle">Enable syntax highlighting</label>
+                </div>
             </div>
 
             <div class="settings-section">
                 <h3>
                     Checks
-                    <span style="font-size: 10px; color: #858585;" id="checksCount">0/100</span>
+                    <div class="checks-header-actions">
+                        <span style="font-size: 10px; color: #858585;" id="checksCount">0/100</span>
+                        <button class="small warning" id="disableAllChecksBtn" title="Disable all checks">Disable All</button>
+                    </div>
                 </h3>
                 <div class="checks-container" id="checksContainer">
                     <div style="font-size: 11px; color: #858585; padding: 10px; text-align: center;">No checks defined</div>
@@ -1401,1533 +1539,15 @@ return true;"></textarea>
         </div>
     </div>
 
-    <script>
-
-        function setHashValue(key, value) {
-            const hash = new URLSearchParams(window.location.hash.slice(1));
-
-            const encoded = Array.isArray(value)
-                ? JSON.stringify(value)  // store arrays as JSON
-                : String(value);
-
-            hash.set(key, encoded);
-            window.location.hash = hash.toString();
-        }
-        function getHashValue(key) {
-            const hash = new URLSearchParams(window.location.hash.slice(1));
-            const raw = hash.get(key);
-            if (raw === null) return null;
-
-            try {
-                const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed)) return parsed;
-            } catch {
-                // Not JSON, return raw string
-            }
-
-            return raw;
-        }
-
-        let ws = null;
-        let logs = []; // Array of log objects with metadata
-        let logElements = new Map(); // Map logId -> DOM element
-        let logIdCounter = 0;
-        let searchFilter = '';
-        let isRegexMode = false;
-        let searchRegex = null;
-        let availableFiles = [];
-        let selectedFiles = new Set();
-        let fileFilter = '';
-        let objectDepth = 2;
-        let bufferSize = 1000;
-        let autoScroll = true;
-        let isConnected = false;
-        let reconnectAttempts = 0;
-        let reconnectTimer = null;
-        let manualDisconnect = false;
-        let lineFilters = {};
-        let currentEditingFile = null;
-        let enabledLogLevels = new Set(['info', 'success', 'warn', 'error', 'fatal']);
-
-        // Checks system
-        let checks = []; // { id: string, name: string, code: string, enabled: boolean, fn: function }
-        let checkIdCounter = 0;
-        let editingCheckId = null;
-        let checksFilter = new Set(); // Set of check IDs that must pass
-
-        // Detail popup
-        let currentDetailLog = null;
-
-        // Display mode
-        let displayMode = 'box'; // 'box' or 'inline'
-
-        // Filter debounce
-        let filterDebounceTimer = null;
-
-        // Statistics tracking
-        let logsReceivedTimes = []; // timestamps of received logs
-        let logsDisplayedTimes = []; // timestamps of displayed logs
-        let statsUpdateInterval = null;
-
-        // Performance monitoring
-        let lastRenderTime = 0;
-        let renderLag = 0;
-        let performanceWarningShown = false;
-        let checkPerformanceLastCheck = Date.now()
-
-        // Rendering performance monitoring
-        let PerformanceMonitoring = {
-            renderTimes: [],
-            renderTimesAvg: 0,
-            checksExecutionTimes: [],
-            checksExecutionTimesAvg: 0
-        }
-        const addPerfMonitoringTime = (type, time) => {
-            const times = type === 'render'
-                ? PerformanceMonitoring.renderTimes
-                : PerformanceMonitoring.checksExecutionTimes;
-
-            times.push(time);
-            if(times.length > 100) {
-                times.shift();
-            }
-        };
-        function getPerfMonitoringAvg(type) {
-            const times = type === 'render'
-                ? PerformanceMonitoring.renderTimes
-                : PerformanceMonitoring.checksExecutionTimes;
-            return times.reduce((a, b) => a + b, 0) / times.length;
-        }
-
-        // Recording
-        const Recording = {
-            isRecording: false,
-            recordDatas: [],
-            start: "",
-            end: ""
-        }
-
-        const LOG_LEVELS = ['silly', 'verbose', 'debug', 'log', 'info', 'success', 'warn', 'error', 'fatal'];
-        const BUFFER_PRESETS = [100, 500, 1000, 5000, 10000, 50000];
-        const MAX_RECONNECT_DELAY = 15000;
-        const BASE_RECONNECT_DELAY = 1000;
-        const MAX_CHECKS = 100;
-
-        // DOM elements
-        const statusIndicator = document.getElementById('statusIndicator');
-        const statusText = document.getElementById('statusText');
-        const connectBtn = document.getElementById('connectBtn');
-        const disconnectBtn = document.getElementById('disconnectBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const recordBtn = document.getElementById('recordBtn');
-        const filterInput = document.getElementById('filterInput');
-        const regexToggle = document.getElementById('regexToggle');
-        const logsContainer = document.getElementById('logsContainer');
-        const totalCount = document.getElementById('totalCount');
-        const visibleCount = document.getElementById('visibleCount');
-        const bufferInfo = document.getElementById('bufferInfo');
-        const fileFilterInput = document.getElementById('fileFilterInput');
-        const fileList = document.getElementById('fileList');
-        const clearFilesBtn = document.getElementById('clearFilesBtn');
-        const selectedFilesInfo = document.getElementById('selectedFilesInfo');
-        const depthSlider = document.getElementById('depthSlider');
-        const depthValue = document.getElementById('depthValue');
-        const bufferSlider = document.getElementById('bufferSlider');
-        const bufferValue = document.getElementById('bufferValue');
-        const disconnectOverlay = document.getElementById('disconnectOverlay');
-        const reconnectInfo = document.getElementById('reconnectInfo');
-        const scrollIndicator = document.getElementById('scrollIndicator');
-        const lineFilterModal = document.getElementById('lineFilterModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const lineRangesContainer = document.getElementById('lineRangesContainer');
-        const addRangeBtn = document.getElementById('addRangeBtn');
-        const cancelModalBtn = document.getElementById('cancelModalBtn');
-        const clearRangesBtn = document.getElementById('clearRangesBtn');
-        const saveRangesBtn = document.getElementById('saveRangesBtn');
-        const logLevelButtons = document.getElementById('logLevelButtons');
-        const selectAllLevels = document.getElementById('selectAllLevels');
-        const selectNoneLevels = document.getElementById('selectNoneLevels');
-        const selectInfoAndAbove = document.getElementById('selectInfoAndAbove');
-        const checksContainer = document.getElementById('checksContainer');
-        const checksCount = document.getElementById('checksCount');
-        const addCheckBtn = document.getElementById('addCheckBtn');
-        const checkModal = document.getElementById('checkModal');
-        const checkModalTitle = document.getElementById('checkModalTitle');
-        const checkNameInput = document.getElementById('checkNameInput');
-        const checkCodeInput = document.getElementById('checkCodeInput');
-        const cancelCheckBtn = document.getElementById('cancelCheckBtn');
-        const saveCheckBtn = document.getElementById('saveCheckBtn');
-        const checksFilterContainer = document.getElementById('checksFilterContainer');
-        const checksResults = document.getElementById('checksResults');
-        const logDetailOverlay = document.getElementById('logDetailOverlay');
-        const logDetailContent = document.getElementById('logDetailContent');
-        const closeLogDetailElem = document.getElementById('closeLogDetail');
-        const toast = document.getElementById('toast');
-        const displayModeToggle = document.querySelector('.display-mode-toggle');
-        const backToLiveBtn = document.getElementById('backToLiveBtn');
-        const logsPerSecondReceived = document.getElementById('logsPerSecondReceived');
-        const logsPerMinuteReceived = document.getElementById('logsPerMinuteReceived');
-        const logsPerSecondDisplayed = document.getElementById('logsPerSecondDisplayed');
-        const logsPerMinuteDisplayed = document.getElementById('logsPerMinuteDisplayed');
-        const performanceWarning = document.getElementById('performanceWarning');
-        const performanceWarningAmount = document.getElementById('performanceWarningAmount');
-        const performanceWarningPing = document.getElementById('performanceWarningPing');
-
-        function showToast(message) {
-            toast.textContent = message;
-            toast.classList.add('visible');
-            setTimeout(() => toast.classList.remove('visible'), 2000);
-        }
-
-        function updateStatus(connected) {
-            isConnected = connected;
-            if (connected) {
-                statusIndicator.classList.add('connected');
-                statusText.textContent = 'Connected';
-                connectBtn.disabled = true;
-                disconnectBtn.disabled = false;
-                disconnectOverlay.classList.remove('visible');
-                reconnectAttempts = 0;
-            } else {
-                statusIndicator.classList.remove('connected');
-                statusText.textContent = 'Disconnected';
-                connectBtn.disabled = false;
-                disconnectBtn.disabled = true;
-                if (!manualDisconnect) {
-                    disconnectOverlay.classList.add('visible');
-                }
-            }
-        }
-
-        function getReconnectDelay() {
-            return Math.min(BASE_RECONNECT_DELAY * Math.pow(1.5, reconnectAttempts), MAX_RECONNECT_DELAY);
-        }
-
-        function scheduleReconnect() {
-            if (manualDisconnect) return;
-            const delay = getReconnectDelay();
-            let countdown = Math.ceil(delay / 1000);
-            reconnectInfo.textContent = `Reconnecting in ${countdown}s...`;
-            const countdownInterval = setInterval(() => {
-                countdown--;
-                if (countdown > 0) {
-                    reconnectInfo.textContent = `Reconnecting in ${countdown}s...`;
-                } else {
-                    clearInterval(countdownInterval);
-                }
-            }, 1000);
-            reconnectTimer = setTimeout(() => {
-                clearInterval(countdownInterval);
-                reconnectInfo.textContent = 'Connecting...';
-                reconnectAttempts++;
-                connect();
-            }, delay);
-        }
-
-        function sortFiles(files) {
-            return files.slice().sort((a, b) => {
-                const aParts = a.split(/[/\\]/);
-                const bParts = b.split(/[/\\]/);
-                const minLen = Math.min(aParts.length, bParts.length);
-                for (let i = 0; i < minLen; i++) {
-                    const aIsLast = i === aParts.length - 1;
-                    const bIsLast = i === bParts.length - 1;
-                    if (!aIsLast && bIsLast) return -1;
-                    if (aIsLast && !bIsLast) return 1;
-                    const cmp = aParts[i].localeCompare(bParts[i], undefined, { sensitivity: 'base' });
-                    if (cmp !== 0) return cmp;
-                }
-                return aParts.length - bParts.length;
-            });
-        }
-
-        async function fetchLogFiles() {
-            try {
-                const response = await fetch('/api/logFiles');
-                if (response.ok) {
-                    const files = await response.json();
-                    availableFiles = sortFiles(files);
-                    renderFileList();
-                } else {
-                    fileList.innerHTML = '<div class="empty-state" style="padding: 15px; font-size: 11px;">Failed to load files</div>';
-                }
-            } catch (e) {
-                console.error('Error fetching log files:', e);
-                fileList.innerHTML = '<div class="empty-state" style="padding: 15px; font-size: 11px;">Error loading files</div>';
-            }
-        }
-
-        function openLineFilterModal(file) {
-            currentEditingFile = file;
-            const parts = file.split(/[/\\]/);
-            const fileName = parts.pop();
-            modalTitle.textContent = `Line Filter: ${fileName}`;
-            const ranges = lineFilters[file] || [];
-            renderLineRanges(ranges);
-            lineFilterModal.classList.add('visible');
-        }
-
-        function closeLineFilterModal() {
-            lineFilterModal.classList.remove('visible');
-            currentEditingFile = null;
-        }
-
-        function renderLineRanges(ranges) {
-            lineRangesContainer.innerHTML = '';
-            if (ranges.length === 0) ranges.push([null, null]);
-            ranges.forEach((range, index) => {
-                const row = document.createElement('div');
-                row.className = 'line-range-row';
-                row.innerHTML = `
-                    <span>Lines</span>
-                    <input type="number" placeholder="Start" value="${range[0] || ''}" data-index="${index}" data-type="start" min="1">
-                    <span>to</span>
-                    <input type="number" placeholder="End" value="${range[1] || ''}" data-index="${index}" data-type="end" min="1">
-                    <button type="button" data-index="${index}" class="remove-range-btn small danger">X</button>
-                `;
-                lineRangesContainer.appendChild(row);
-            });
-            lineRangesContainer.querySelectorAll('.remove-range-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const index = parseInt(e.target.dataset.index);
-                    const rows = lineRangesContainer.querySelectorAll('.line-range-row');
-                    if (rows.length > 1) rows[index].remove();
-                });
-            });
-        }
-
-        function getModalRanges() {
-            const ranges = [];
-            lineRangesContainer.querySelectorAll('.line-range-row').forEach(row => {
-                const start = parseInt(row.querySelector('input[data-type="start"]').value) || null;
-                const end = parseInt(row.querySelector('input[data-type="end"]').value) || null;
-                if (start !== null && end !== null && start <= end) {
-                    ranges.push([start, end]);
-                }
-            });
-            return ranges;
-        }
-
-        addRangeBtn.addEventListener('click', () => {
-            const currentRanges = getModalRanges();
-            currentRanges.push([null, null]);
-            renderLineRanges(currentRanges);
-        });
-
-        cancelModalBtn.addEventListener('click', closeLineFilterModal);
-
-        clearRangesBtn.addEventListener('click', () => {
-            if (currentEditingFile) {
-                delete lineFilters[currentEditingFile];
-                renderFileList();
-                fullRender();
-            }
-            closeLineFilterModal();
-        });
-
-        saveRangesBtn.addEventListener('click', () => {
-            if (currentEditingFile) {
-                const ranges = getModalRanges();
-                if (ranges.length > 0) {
-                    lineFilters[currentEditingFile] = ranges;
-                } else {
-                    delete lineFilters[currentEditingFile];
-                }
-                renderFileList();
-                fullRender();
-            }
-            closeLineFilterModal();
-        });
-
-        lineFilterModal.addEventListener('mousedown', (e) => {
-            if (e.target === lineFilterModal) closeLineFilterModal();
-        });
-
-        function renderFileList() {
-            const filtered = fileFilter
-                ? availableFiles.filter(f => f.toLowerCase().includes(fileFilter.toLowerCase()))
-                : availableFiles;
-
-            if (filtered.length === 0) {
-                fileList.innerHTML = '<div class="empty-state" style="padding: 15px; font-size: 11px;">No files match</div>';
-                return;
-            }
-
-            fileList.innerHTML = '';
-            filtered.forEach(file => {
-                const item = document.createElement('div');
-                item.className = 'file-item' + (selectedFiles.has(file) ? ' selected' : '');
-                const parts = file.split(/[/\\]/);
-                const fileName = parts.pop();
-                const directory = parts.join('/');
-                const namePart = document.createElement('span');
-                namePart.className = 'file-name-part';
-                if (directory) {
-                    namePart.innerHTML = `<span class="directory">${directory}/</span>${fileName}`;
-                } else {
-                    namePart.textContent = fileName;
-                }
-                item.title = file
-                item.appendChild(namePart);
-
-                if (selectedFiles.has(file) && selectedFiles.size <= 10) {
-                    const lineBtn = document.createElement('button');
-                    lineBtn.className = 'line-filter-btn' + (lineFilters[file] ? ' active' : '');
-                    lineBtn.textContent = lineFilters[file] ? `${lineFilters[file].length}` : 'L';
-                    lineBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        openLineFilterModal(file);
-                    });
-                    item.appendChild(lineBtn);
-                }
-
-                item.addEventListener('click', () => {
-                    if (selectedFiles.has(file)) {
-                        selectedFiles.delete(file);
-                        delete lineFilters[file];
-                    } else {
-                        selectedFiles.add(file);
-                    }
-                    updateSelectedFilesInfo();
-                    renderFileList();
-                    fullRender();
-                });
-
-                fileList.appendChild(item);
-            });
-        }
-
-        function updateSelectedFilesInfo() {
-            const count = selectedFiles.size;
-            if (count === 0) {
-                selectedFilesInfo.textContent = 'No files selected (all logs)';
-            } else {
-                const lineFilterCount = Object.keys(lineFilters).length;
-                let text = `${count} file${count > 1 ? 's' : ''}`;
-                if (lineFilterCount > 0) text += ` (${lineFilterCount} filtered)`;
-                selectedFilesInfo.textContent = text;
-            }
-        }
-
-        function updateLogLevelButtons() {
-            logLevelButtons.querySelectorAll('.log-level-btn').forEach(btn => {
-                const level = btn.dataset.level;
-                btn.classList.toggle('active', enabledLogLevels.has(level));
-            });
-        }
-
-        function toggleLogLevel(level) {
-            if (enabledLogLevels.has(level)) {
-                enabledLogLevels.delete(level);
-            } else {
-                enabledLogLevels.add(level);
-            }
-            updateLogLevelButtons();
-            fullRender();
-        }
-
-        logLevelButtons.addEventListener('click', (e) => {
-            const btn = e.target.closest('.log-level-btn');
-            if (btn) toggleLogLevel(btn.dataset.level);
-        });
-
-        selectAllLevels.addEventListener('click', () => {
-            enabledLogLevels = new Set(LOG_LEVELS);
-            updateLogLevelButtons();
-            fullRender();
-        });
-
-        selectNoneLevels.addEventListener('click', () => {
-            enabledLogLevels.clear();
-            updateLogLevelButtons();
-            fullRender();
-        });
-
-        selectInfoAndAbove.addEventListener('click', () => {
-            enabledLogLevels = new Set(['info', 'success', 'warn', 'error', 'fatal']);
-            updateLogLevelButtons();
-            fullRender();
-        });
-
-        function updateSearchFilter() {
-            searchFilter = filterInput.value;
-            searchRegex = null;
-            filterInput.classList.remove('regex-error');
-
-            if (isRegexMode && searchFilter) {
-                try {
-                    searchRegex = new RegExp(searchFilter, 'gi');
-                    filterInput.classList.add('regex-mode');
-                } catch (e) {
-                    filterInput.classList.add('regex-error');
-                    searchRegex = null;
-                }
-            } else {
-                filterInput.classList.remove('regex-mode');
-            }
-
-            fullRender();
-        }
-
-        regexToggle.addEventListener('click', () => {
-            isRegexMode = !isRegexMode;
-            regexToggle.classList.toggle('active', isRegexMode);
-            filterInput.placeholder = isRegexMode ? 'Regex search...' : 'Search logs...';
-            updateSearchFilter();
-        });
-
-        filterInput.addEventListener('input', () => {
-            // Debounce filter input - run 500ms after user stops typing
-            if (filterDebounceTimer) {
-                clearTimeout(filterDebounceTimer);
-            }
-            filterDebounceTimer = setTimeout(() => {
-                updateSearchFilter();
-                filterDebounceTimer = null;
-            }, 500);
-        });
-
-        function formatArgs(args, depth) {
-            if (!args || args.length === 0) return '';
-            return args.map(arg => {
-                if (typeof arg === 'object' && arg !== null) {
-                    try {
-                        return stringifyWithDepth(arg, depth);
-                    } catch (e) {
-                        return String(arg);
-                    }
-                }
-                return String(arg);
-            }).join(' ');
-        }
-
-        function stringifyWithDepth(obj, maxDepth, currentDepth = 0) {
-            if (obj === null) return 'null';
-            if (obj === undefined) return 'undefined';
-            if (typeof obj !== 'object') return JSON.stringify(obj);
-
-            if (currentDepth >= maxDepth) {
-                if (Array.isArray(obj)) return `[Array(${obj.length})]`;
-                const keys = Object.keys(obj);
-                if (keys.length === 0) return '{}';
-                return `{${keys.join(', ')}}`;
-            }
-
-            if (Array.isArray(obj)) {
-                if (obj.length === 0) return '[]';
-                const items = obj.map(item => stringifyWithDepth(item, maxDepth, currentDepth + 1));
-                return '[\n' + items.map(item => '  '.repeat(currentDepth + 1) + item).join(',\n') + '\n' + '  '.repeat(currentDepth) + ']';
-            }
-
-            const keys = Object.keys(obj);
-            if (keys.length === 0) return '{}';
-            const items = keys.map(key => {
-                const value = stringifyWithDepth(obj[key], maxDepth, currentDepth + 1);
-                return '  '.repeat(currentDepth + 1) + JSON.stringify(key) + ': ' + value;
-            });
-            return '{\n' + items.join(',\n') + '\n' + '  '.repeat(currentDepth) + '}';
-        }
-
-        function formatDate(dateString) {
-            if (!dateString) return '';
-            try {
-                const date = new Date(dateString);
-                return date.toLocaleString('fr-FR', {
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    fractionalSecondDigits: 3
-                });
-            } catch (e) {
-                return dateString;
-            }
-        }
-
-        function getFileFromCallLine(callLine) {
-            if (!callLine) return null;
-            const match = callLine.match(/^(.+?):(\d+)(?::\d+)?$/);
-            return match ? match[1] : callLine;
-        }
-
-        function getLineFromCallLine(callLine) {
-            if (!callLine) return null;
-            const match = callLine.match(/:(\d+)(?::\d+)?$/);
-            return match ? parseInt(match[1]) : null;
-        }
-
-        function isLineInRanges(line, ranges) {
-            if (!ranges || ranges.length === 0) return true;
-            return ranges.some(([start, end]) => line >= start && line <= end);
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function highlightMatches(text, regex) {
-            if (!regex) return escapeHtml(text);
-            regex.lastIndex = 0;
-            const result = [];
-            let lastIndex = 0;
-            let match;
-            while ((match = regex.exec(text)) !== null) {
-                if (match.index > lastIndex) {
-                    result.push(escapeHtml(text.slice(lastIndex, match.index)));
-                }
-                result.push(`<span class="highlight">${escapeHtml(match[0])}</span>`);
-                lastIndex = regex.lastIndex;
-                if (match[0].length === 0) regex.lastIndex++;
-            }
-            if (lastIndex < text.length) {
-                result.push(escapeHtml(text.slice(lastIndex)));
-            }
-            return result.join('');
-        }
-
-        function matchesSearch(logText) {
-            if (!searchFilter) return true;
-            if (isRegexMode && searchRegex) {
-                searchRegex.lastIndex = 0;
-                return searchRegex.test(logText);
-            }
-            return logText.toLowerCase().includes(searchFilter.toLowerCase());
-        }
-
-        // Checks system
-        function runCheck(check, log) {
-            try {
-                const fn = check.fn;
-                const date = log.date ? new Date(log.date) : new Date(0);
-                const boundDatas = log.boundDatas || {};
-                return !!fn(date, log.type, log.callLine, log.argList, boundDatas);
-            } catch (e) {
-                console.error('Check error:', check.name, e);
-                return false;
-            }
-        }
-
-        function getLogCheckResults(log) {
-            const results = {};
-            checks.filter(c => c.enabled).forEach(check => {
-                results[check.id] = runCheck(check, log);
-            });
-            return results;
-        }
-
-        function passesChecksFilter(log) {
-            if (checksFilter.size === 0) return true;
-            const results = getLogCheckResults(log);
-            for (const checkId of checksFilter) {
-                if (!results[checkId]) return false;
-            }
-            return true;
-        }
-
-        function renderChecksContainer() {
-            checksCount.textContent = `${checks.length}/${MAX_CHECKS}`;
-            addCheckBtn.disabled = checks.length >= MAX_CHECKS;
-
-            if (checks.length === 0) {
-                checksContainer.innerHTML = '<div style="font-size: 11px; color: #858585; padding: 10px; text-align: center;">No checks defined</div>';
-            } else {
-                checksContainer.innerHTML = '';
-                checks.forEach(check => {
-                    const item = document.createElement('div');
-                    item.className = 'check-item';
-                    item.innerHTML = `
-                        <input type="checkbox" ${check.enabled ? 'checked' : ''} data-id="${check.id}">
-                        <span class="check-name" title="${escapeHtml(check.name)}">${check.id}: ${escapeHtml(check.name)}</span>
-                        <div class="check-actions">
-                            <button class="secondary edit-check" data-id="${check.id}">Edit</button>
-                            <button class="danger del-check" data-id="${check.id}">X</button>
-                        </div>
-                    `;
-                    checksContainer.appendChild(item);
-                });
-
-                checksContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                    cb.addEventListener('change', (e) => {
-                        const id = parseInt(e.target.dataset.id);
-                        const check = checks.find(c => c.id === id);
-                        if (check) {
-                            check.enabled = e.target.checked;
-                            renderChecksFilterContainer();
-                            fullRender();
-                        }
-                    });
-                });
-
-                checksContainer.querySelectorAll('.edit-check').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = parseInt(e.target.dataset.id);
-                        openCheckModal(id);
-                    });
-                });
-
-                checksContainer.querySelectorAll('.del-check').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = parseInt(e.target.dataset.id);
-                        checks = checks.filter(c => c.id !== id);
-                        checksFilter.delete(id);
-                        renderChecksContainer();
-                        renderChecksFilterContainer();
-                        fullRender();
-                    });
-                });
-            }
-        }
-
-        function renderChecksFilterContainer() {
-            const enabledChecks = checks.filter(c => c.enabled);
-            if (enabledChecks.length === 0) {
-                checksFilterContainer.innerHTML = '<span style="font-size: 11px; color: #666;">No checks enabled</span>';
-                return;
-            }
-            checksFilterContainer.innerHTML = '';
-            enabledChecks.forEach(check => {
-                const chip = document.createElement('span');
-                chip.className = 'check-filter-chip' + (checksFilter.has(check.id) ? ' active' : '');
-                chip.textContent = check.id;
-                chip.title = check.name;
-                chip.addEventListener('click', () => {
-                    if (checksFilter.has(check.id)) {
-                        checksFilter.delete(check.id);
-                    } else {
-                        checksFilter.add(check.id);
-                    }
-                    renderChecksFilterContainer();
-                    fullRender();
-                });
-                checksFilterContainer.appendChild(chip);
-            });
-        }
-
-        function openCheckModal(checkId = null) {
-            editingCheckId = checkId;
-            if (checkId !== null) {
-                const check = checks.find(c => c.id === checkId);
-                if (check) {
-                    checkModalTitle.textContent = 'Edit Check';
-                    checkNameInput.value = check.name;
-                    checkCodeInput.value = check.code;
-                }
-            } else {
-                checkModalTitle.textContent = 'Create Check';
-                checkNameInput.value = '';
-                checkCodeInput.value = '// Example: return argList.some(arg => arg?.error);\nreturn true;';
-            }
-            checkModal.classList.add('visible');
-            checkNameInput.focus();
-        }
-
-        function closeCheckModal() {
-            checkModal.classList.remove('visible');
-            editingCheckId = null;
-        }
-
-        addCheckBtn.addEventListener('click', () => openCheckModal());
-        cancelCheckBtn.addEventListener('click', closeCheckModal);
-        checkModal.addEventListener('mousedown', (e) => {
-            if (e.target === checkModal) closeCheckModal();
-        });
-
-        saveCheckBtn.addEventListener('click', () => {
-            const name = checkNameInput.value.trim() || 'Unnamed Check';
-            const code = checkCodeInput.value;
-
-            // Validate code
-            try {
-                let func = new Function('date', 'type', 'callLine', 'argList', 'boundDatas', code);
-
-                // Check function execution time
-                const startTime = performance.now();
-                func(new Date(), 'info', 'callLine', [], []);
-                const endTime = performance.now();
-                if (endTime - startTime > 10) {
-                    throw new Error('Function execution time too long (> 10ms)');
-                }
-            } catch (e) {
-                showToast('Invalid code: ' + e.message);
-                return;
-            }
-
-            if (editingCheckId !== null) {
-                const check = checks.find(c => c.id === editingCheckId);
-                if (check) {
-                    check.name = name;
-                    check.code = code;
-                    // recompile function
-                    check.fn = new Function(
-                        'date', 'type', 'callLine', 'argList', 'boundDatas', 
-                        code
-                    );
-                }
-            } else {
-                if (checks.length >= MAX_CHECKS) {
-                    showToast('Maximum 100 checks allowed');
-                    return;
-                }
-                checks.push({
-                    id: ++checkIdCounter,
-                    name,
-                    code,
-                    enabled: true,
-                    fn: new Function(
-                        'date', 'type', 'callLine', 'argList', 'boundDatas', 
-                        code
-                    )
-                });
-            }
-
-            renderChecksContainer();
-            renderChecksFilterContainer();
-            fullRender();
-            closeCheckModal();
-        });
-
-        function shouldShowLog(log) {
-            // Check log level
-            if (!enabledLogLevels.has(log.type.toLowerCase())) return false;
-
-            // Check search filter
-            const logText = formatArgs(log.argList, objectDepth);
-            if (!matchesSearch(logText)) return false;
-
-            // Check file filter
-            if (selectedFiles.size > 0) {
-                const file = getFileFromCallLine(log.callLine);
-                if (!file || !selectedFiles.has(file)) return false;
-                const ranges = lineFilters[file];
-                if (ranges && ranges.length > 0) {
-                    const line = getLineFromCallLine(log.callLine);
-                    if (line === null || !isLineInRanges(line, ranges)) return false;
-                }
-            }
-
-            // Check checks filter
-            if (!passesChecksFilter(log)) return false;
-
-            return true;
-        }
-
-        function createLogEntry(log, isNew = false) {
-            const entry = document.createElement('div');
-            entry.dataset.logId = log.id;
-
-            const logText = formatArgs(log.argList, objectDepth);
-            const enabledChecks = checks.filter(c => c.enabled);
-
-            if (displayMode === 'inline') {
-                // Inline mode: single line (date, type, callline, args) with checks on right
-                entry.className = `log-entry ${log.type} inline-mode${isNew ? ' new' : ''}`;
-
-                const dateSpan = document.createElement('span');
-                dateSpan.className = 'log-inline-date';
-                dateSpan.textContent = log.date ? formatDate(log.date) : '';
-
-                const typeSpan = document.createElement('span');
-                typeSpan.className = `log-inline-type log-type ${log.type}`;
-                typeSpan.textContent = log.type;
-
-                const callLineSpan = document.createElement('span');
-                callLineSpan.className = 'log-inline-callline';
-                callLineSpan.textContent = log.callLine || '';
-                callLineSpan.title = log.callLine || '';
-
-                const argsSpan = document.createElement('span');
-                argsSpan.className = 'log-inline-args';
-                if (searchFilter && (isRegexMode ? searchRegex : true)) {
-                    if (isRegexMode && searchRegex) {
-                        argsSpan.innerHTML = highlightMatches(logText, new RegExp(searchFilter, 'gi'));
-                    } else if (searchFilter) {
-                        const regex = new RegExp(searchFilter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-                        argsSpan.innerHTML = highlightMatches(logText, regex);
-                    }
-                } else {
-                    argsSpan.textContent = logText;
-                }
-                argsSpan.title = logText;
-
-                // Checks on the right
-                const checksDiv = document.createElement('div');
-                checksDiv.className = 'log-inline-checks';
-                enabledChecks.forEach(check => {
-                    const result = runCheck(check, log);
-                    const icon = document.createElement('span');
-                    icon.className = `log-check-icon ${result ? 'pass' : 'fail'}`;
-                    icon.textContent = check.id;
-                    icon.title = `${check.name}: ${result ? 'Pass' : 'Fail'}`;
-                    checksDiv.appendChild(icon);
-                });
-
-                entry.appendChild(dateSpan);
-                entry.appendChild(typeSpan);
-                entry.appendChild(callLineSpan);
-                entry.appendChild(argsSpan);
-                entry.appendChild(checksDiv);
-            } else {
-                // Box mode (default)
-                entry.className = `log-entry ${log.type}${isNew ? ' new' : ''}`;
-
-                const header = document.createElement('div');
-                header.className = 'log-header';
-
-                const leftSide = document.createElement('div');
-                leftSide.className = 'log-header-left';
-
-                const typeSpan = document.createElement('span');
-                typeSpan.className = `log-type ${log.type}`;
-                typeSpan.textContent = log.type;
-
-                const dateSpan = document.createElement('span');
-                dateSpan.className = 'log-date';
-                dateSpan.textContent = log.date ? formatDate(log.date) : '';
-
-                // Check results for this log
-                const checksDiv = document.createElement('div');
-                checksDiv.className = 'log-checks';
-                enabledChecks.forEach(check => {
-                    const result = runCheck(check, log);
-                    const icon = document.createElement('span');
-                    icon.className = `log-check-icon ${result ? 'pass' : 'fail'}`;
-                    icon.textContent = check.id;
-                    icon.title = `${check.name}: ${result ? 'Pass' : 'Fail'}`;
-                    checksDiv.appendChild(icon);
-                });
-
-                leftSide.appendChild(typeSpan);
-                leftSide.appendChild(dateSpan);
-                leftSide.appendChild(checksDiv);
-
-                const rightSide = document.createElement('div');
-                rightSide.className = 'log-header-right';
-
-                const lineSpan = document.createElement('span');
-                lineSpan.className = 'log-line';
-                lineSpan.textContent = log.callLine || '';
-
-                rightSide.appendChild(lineSpan);
-
-                header.appendChild(leftSide);
-                header.appendChild(rightSide);
-
-                const content = document.createElement('div');
-                content.className = 'log-content';
-
-                if (searchFilter && (isRegexMode ? searchRegex : true)) {
-                    if (isRegexMode && searchRegex) {
-                        content.innerHTML = highlightMatches(logText, new RegExp(searchFilter, 'gi'));
-                    } else if (searchFilter) {
-                        const regex = new RegExp(searchFilter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-                        content.innerHTML = highlightMatches(logText, regex);
-                    }
-                } else {
-                    content.textContent = logText;
-                }
-
-                entry.appendChild(header);
-                entry.appendChild(content);
-            }
-
-            entry.addEventListener('click', () => openLogDetail(log));
-
-            return entry;
-        }
-
-        function updateChecksResultsHeader() {
-            const enabledChecks = checks.filter(c => c.enabled);
-            if (enabledChecks.length === 0) {
-                checksResults.innerHTML = '';
-                return;
-            }
-
-            checksResults.innerHTML = '';
-            const visibleLogs = logs.filter(log => shouldShowLog(log));
-
-            enabledChecks.forEach(check => {
-                let passCount = 0;
-                let failCount = 0;
-                visibleLogs.forEach(log => {
-                    if (runCheck(check, log)) passCount++;
-                    else failCount++;
-                });
-
-                const icon = document.createElement('span');
-                icon.className = `check-result-icon ${passCount > failCount ? 'pass' : failCount > 0 ? 'fail' : 'neutral'}`;
-                icon.textContent = check.id;
-                icon.title = `${check.name}\nPass: ${passCount}, Fail: ${failCount}`;
-                checksResults.appendChild(icon);
-            });
-        }
-
-        // Log detail popup
-        function openLogDetail(log) {
-            currentDetailLog = log;
-            const boundDatas = log.boundDatas || {};
-
-            logDetailContent.innerHTML = `
-                <div class="log-detail-meta">
-                    <div class="log-detail-meta-item">
-                        <label>Type</label>
-                        <span class="log-type ${log.type}">${log.type.toUpperCase()}</span>
-                    </div>
-                    <div class="log-detail-meta-item">
-                        <label>Date</label>
-                        <span>${log.date ? new Date(log.date).toLocaleString() : 'N/A'}</span>
-                    </div>
-                    <div class="log-detail-meta-item">
-                        <label>Call Line</label>
-                        <span>${log.callLine || 'N/A'}</span>
-                    </div>
-                </div>
-                <div class="log-detail-section">
-                    <h4>
-                        Arguments (depth: 5)
-                        <div class="copy-buttons">
-                            <button class="secondary" id="copyCompact">Copy Compact</button>
-                            <button class="secondary" id="copyExtended">Copy Extended</button>
-                        </div>
-                    </h4>
-                    <pre id="logArgsContent">${escapeHtml(formatArgs(log.argList, 5))}</pre>
-                </div>
-                <div class="log-detail-section">
-                    <h4>Bound Data</h4>
-                    <pre>${escapeHtml(Object.keys(boundDatas).length > 0 ? stringifyWithDepth(boundDatas, 5) : '(empty)')}</pre>
-                </div>
-                <div class="log-detail-section">
-                    <h4>Check Results</h4>
-                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                        ${checks.filter(c => c.enabled).map(check => {
-                            const result = runCheck(check, log);
-                            return `<span class="log-check-icon ${result ? 'pass' : 'fail'}">${check.id}: ${check.name} - ${result ? 'PASS' : 'FAIL'}</span>`;
-                        }).join('')}
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('copyCompact').addEventListener('click', () => {
-                const compact = JSON.stringify(log.argList);
-                navigator.clipboard.writeText(compact);
-                showToast('Copied compact JSON');
-            });
-
-            document.getElementById('copyExtended').addEventListener('click', () => {
-                const extended = JSON.stringify(log.argList, null, 2);
-                navigator.clipboard.writeText(extended);
-                showToast('Copied extended JSON');
-            });
-
-            logDetailOverlay.classList.add('visible');
-        }
-
-        function closeLogDetail() {
-            logDetailOverlay.classList.remove('visible');
-            currentDetailLog = null;
-        }
-
-        closeLogDetailElem.addEventListener('click', closeLogDetail);
-        logDetailOverlay.addEventListener('mousedown', (e) => {
-            if (e.target === logDetailOverlay) closeLogDetail();
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (logDetailOverlay.classList.contains('visible')) closeLogDetail();
-                else if (checkModal.classList.contains('visible')) closeCheckModal();
-                else if (lineFilterModal.classList.contains('visible')) closeLineFilterModal();
-            }
-        });
-
-        function isAtBottom() {
-            const threshold = 50;
-            return logsContainer.scrollHeight - logsContainer.scrollTop - logsContainer.clientHeight < threshold;
-        }
-
-        function updateScrollIndicator() {
-            if (!autoScroll && logs.length > 0) {
-                scrollIndicator.classList.add('visible');
-                backToLiveBtn.classList.add('visible');
-            } else {
-                scrollIndicator.classList.remove('visible');
-                backToLiveBtn.classList.remove('visible');
-            }
-        }
-
-        function scrollToBottom() {
-            logsContainer.scrollTop = logsContainer.scrollHeight;
-            autoScroll = true;
-            updateScrollIndicator();
-        }
-
-        // Optimized rendering - full render when filters change
-        function fullRender() {
-            const wasAtBottom = isAtBottom();
-
-            // Clear container except scroll indicator
-            logsContainer.innerHTML = '';
-            logsContainer.appendChild(scrollIndicator);
-            logElements.clear();
-
-            const filtered = logs.filter(log => shouldShowLog(log));
-
-            if (filtered.length === 0 && logs.length === 0) {
-                logsContainer.insertBefore(
-                    createEmptyState('No logs received. Connect to WebSocket to start.'),
-                    scrollIndicator
-                );
-            } else if (filtered.length === 0) {
-                logsContainer.insertBefore(
-                    createEmptyState('No logs match the filters.'),
-                    scrollIndicator
-                );
-            } else {
-                filtered.forEach(log => {
-                    const entry = createLogEntry(log, log.isNew);
-                    log.isNew = false;
-                    logsContainer.insertBefore(entry, scrollIndicator);
-                    logElements.set(log.id, entry);
-                });
-            }
-
-            if (wasAtBottom && autoScroll) {
-                logsContainer.scrollTop = logsContainer.scrollHeight;
-            }
-
-            totalCount.textContent = logs.length;
-            updateScrollIndicator();
-            updateChecksResultsHeader();
-        }
-
-        function createEmptyState(message) {
-            const div = document.createElement('div');
-            div.className = 'empty-state';
-            div.textContent = message;
-            return div;
-        }
-
-        function updateCurrentDisplayedAmount() {
-            let amount = logsContainer.children.length - 1;
-            visibleCount.textContent = parseInt(amount)
-        }
-
-        // Optimized addLog - append directly to DOM
-        function addLog(logData) {
-            const startTime = performance.now();
-
-            if (!logData.date) {
-                logData.date = new Date().toISOString();
-            }
-
-            // Default boundDatas to empty object if null/undefined
-            if (logData.boundDatas == null) {
-                logData.boundDatas = {};
-            }
-
-            const log = {
-                id: ++logIdCounter,
-                ...logData,
-                isNew: true
-            };
-            log.type = logData.type.slice(4)
-
-            logs.push(log);
-
-            // Track received log timestamp for statistics
-            logsReceivedTimes.push(Date.now());
-
-            // Trim buffer if needed
-            while (logs.length > bufferSize) {
-                const removed = logs.shift();
-                const element = logElements.get(removed.id);
-                if (element && element.parentNode) {
-                    element.parentNode.removeChild(element);
-                }
-                logElements.delete(removed.id);
-            }
-
-            // Update file list if new file
-            const file = getFileFromCallLine(logData.callLine);
-            if (file && !availableFiles.includes(file)) {
-                availableFiles.push(file);
-                availableFiles = sortFiles(availableFiles);
-                renderFileList();
-            }
-
-            // Remove empty state if present
-            const emptyState = logsContainer.querySelector('.empty-state');
-            if (emptyState) emptyState.remove();
-
-            // Check if log should be displayed
-            if (shouldShowLog(log)) {
-                Recording.recordDatas.push(logData);
-                const wasAtBottom = isAtBottom();
-                const entry = createLogEntry(log, true);
-                logsContainer.insertBefore(entry, scrollIndicator);
-                logElements.set(log.id, entry);
-
-                if (wasAtBottom && autoScroll) {
-                    logsContainer.scrollTop = logsContainer.scrollHeight;
-                }
-
-                // Track displayed log timestamp for statistics
-                logsDisplayedTimes.push(Date.now());
-            }
-
-            totalCount.textContent = logs.length;
-            
-            updateScrollIndicator();
-
-            let startTime_checks = performance.now();
-            updateChecksResultsHeader();
-            let checksExecutionTime = performance.now() - startTime_checks;
-
-            // Track render time for performance monitoring
-            renderLag = performance.now() - startTime;
-
-            if(checksExecutionTime > 1000) {
-                disconnect()
-                console.error(`Checks execution time took too long: ${renderLag}ms. Websocket has been disconnected.`)
-                alert(`Checks execution took too long: ${renderLag}ms. Websocket has been disconnected.\n\nPlease fix the issue and reload the page.`)
-            }
-
-            addPerfMonitoringTime('render', renderLag);
-            addPerfMonitoringTime('checks', checksExecutionTime);
-            
-        }
-
-        function connect() {
-            if (ws && ws.readyState === WebSocket.OPEN) return;
-
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}`;
-
-            ws = new WebSocket(wsUrl);
-
-            ws.onopen = () => {
-                console.log('WebSocket connected');
-                updateStatus(true);
-                manualDisconnect = false;
-            };
-
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if(data.type == 'pong') {
-                        let roadtrip_delay = (new Date(data.timestamp)).getTime() - (new Date()).getTime()
-                        console.log("Roadtrip delay: ", roadtrip_delay,)
-                        let d = new Date()
-                        let d_timestamp = new Date(data.timestamp)
-                        performanceWarningPing.textContent = Math.round(d.getTime() - d_timestamp.getTime())/1000
-                        
-                        let msBehind = checkPerformance(d_timestamp, d);
-                        performanceWarningAmount.textContent = msBehind
-
-                        if(msBehind < 500) {
-                            togglePerformanceWarning('ping', false);
-                        }
-                    }
-                    if ([
-                        'log-silly',
-                        'log-verbose',
-                        'log-debug',
-                        'log-log',
-                        'log-info',
-                        'log-success',
-                        'log-warn',
-                        'log-error',
-                        'log-fatal'
-                    ].includes(data.type)) {
-                        addLog({
-                            type: data.type,
-                            callLine: data.callLine || '',
-                            argList: data.argList,
-                            date: data.date || new Date().toISOString(),
-                            boundDatas: data.boundDatas || {}
-                        });
-                    }
-                } catch (e) {
-                    console.error('JSON parsing error:', e);
-                }
-            };
-
-            ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-            };
-
-            ws.onclose = () => {
-                console.log('WebSocket disconnected');
-                updateStatus(false);
-                ws = null;
-                if (!manualDisconnect) {
-                    scheduleReconnect();
-                }
-            };
-
-
-            setInterval(() => {
-                // send ping packet
-                if(!ws) return
-                if(ws.readyState !== WebSocket.OPEN) return
-                ws.send(JSON.stringify({
-                    type: 'ping',
-                    timestamp: new Date().toISOString()
-                }))
-            }, 1000)
-        }
-
-        function disconnect() {
-            manualDisconnect = true;
-            if (reconnectTimer) {
-                clearTimeout(reconnectTimer);
-                reconnectTimer = null;
-            }
-            if (ws) {
-                ws.close();
-                ws = null;
-            }
-            disconnectOverlay.classList.remove('visible');
-        }
-
-        function clearLogs() {
-            logs = [];
-            logElements.clear();
-            logIdCounter = 0;
-            // Reset statistics
-            logsReceivedTimes = [];
-            logsDisplayedTimes = [];
-            performanceWarning.classList.remove('visible');
-            performanceWarningShown = false;
-            fullRender();
-        }
-
-        connectBtn.addEventListener('click', () => {
-            manualDisconnect = false;
-            connect();
-        });
-        disconnectBtn.addEventListener('click', disconnect);
-        clearBtn.addEventListener('click', clearLogs);
-
-        function saveRecordingFile() {
-            /* get the Recording.recordDatas as Array<{
-                            type: data.type,
-                            callLine: data.callLine || '',
-                            argList: data.argList,
-                            date: data.date || new Date().toISOString(),
-                            boundDatas: data.boundDatas || {}
-            }>
-            writes them to a virtual file and prompt user to download it
-            */
-
-            const downloadConfirmation = confirm(`Click OK to download the recording file.`);
-
-            if (downloadConfirmation) {
-
-                const lines = Recording.recordDatas.sort((a,b) => {
-                    // compare X.date (ISO string) in the most effective and performant way
-                    return new Date(a.date) - new Date(b.date);
-                }).map(log => {
-                    return `${log.date} ${log.type.toUpperCase()} (${log.callLine}): ${log.argList.map(x=>{ return typeof x == 'string' ? x : JSON.stringify(x) }).join(' ')}\n`;
-                }).join('\n');
-
-                const blob = new Blob([lines], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${Recording.start}_${Recording.end}_LoggyLogger_record.log`;
-                a.click();
-                URL.revokeObjectURL(url);
-            }
-        }
-        recordBtn.addEventListener('click', () => {
-            if(Recording.isRecording) {
-                Recording.end = (new Date()).toISOString();
-                Recording.isRecording = false;
-                recordBtn.classList.remove('recording');
-                recordBtn.textContent = 'Record';
-                saveRecordingFile();
-            } else {
-                Recording.start = (new Date()).toISOString();
-                Recording.isRecording = true;
-                recordBtn.classList.add('recording');
-                recordBtn.textContent = 'Recording...';
-            }
-        });
-
-        fileFilterInput.addEventListener('input', (e) => {
-            fileFilter = e.target.value;
-            renderFileList();
-        });
-
-        clearFilesBtn.addEventListener('click', () => {
-            selectedFiles.clear();
-            lineFilters = {};
-            renderFileList();
-            updateSelectedFilesInfo();
-            fullRender();
-        });
-
-        depthSlider.addEventListener('input', (e) => {
-            objectDepth = parseInt(e.target.value, 10);
-            depthValue.textContent = objectDepth;
-            fullRender();
-        });
-
-        bufferSlider.addEventListener('input', (e) => {
-            const index = parseInt(e.target.value, 10);
-            bufferSize = BUFFER_PRESETS[index];
-            bufferValue.textContent = bufferSize.toLocaleString();
-            bufferInfo.textContent = bufferSize.toLocaleString();
-
-            while (logs.length > bufferSize) {
-                const removed = logs.shift();
-                const element = logElements.get(removed.id);
-                if (element && element.parentNode) {
-                    element.parentNode.removeChild(element);
-                }
-                logElements.delete(removed.id);
-            }
-            totalCount.textContent = logs.length;
-        });
-
-        logsContainer.addEventListener('scroll', () => {
-            autoScroll = isAtBottom();
-            updateScrollIndicator();
-        });
-
-        scrollIndicator.addEventListener('click', scrollToBottom);
-        backToLiveBtn.addEventListener('click', scrollToBottom);
-
-        // Display mode toggle
-        displayModeToggle.addEventListener('click', (e) => {
-            const btn = e.target.closest('.display-mode-btn');
-            if (btn) {
-                const mode = btn.dataset.mode;
-                if (mode !== displayMode) {
-                    displayMode = mode;
-                    displayModeToggle.querySelectorAll('.display-mode-btn').forEach(b => {
-                        b.classList.toggle('active', b.dataset.mode === mode);
-                    });
-                    fullRender();
-                }
-            }
-        });
-
-        // Statistics functions
-        function updateStatistics() {
-            const now = Date.now();
-            const oneSecondAgo = now - 1000;
-            const oneMinuteAgo = now - 60000;
-
-            // Clean old timestamps
-            logsReceivedTimes = logsReceivedTimes.filter(t => t > oneMinuteAgo);
-            logsDisplayedTimes = logsDisplayedTimes.filter(t => t > oneMinuteAgo);
-
-            // Calculate per second (last second)
-            const receivedPerSecond = logsReceivedTimes.filter(t => t > oneSecondAgo).length;
-            const displayedPerSecond = logsDisplayedTimes.filter(t => t > oneSecondAgo).length;
-
-
-            if(displayedPerSecond > 20) {
-                togglePerformanceWarning('display', true);
-            } else {
-                togglePerformanceWarning('display', false);
-            }
-
-            // Calculate per minute average
-            const receivedPerMinute = logsReceivedTimes.length;
-            const displayedPerMinute = logsDisplayedTimes.length;
-
-            logsPerSecondReceived.textContent = receivedPerSecond;
-            logsPerMinuteReceived.textContent = receivedPerMinute;
-            logsPerSecondDisplayed.textContent = displayedPerSecond;
-            logsPerMinuteDisplayed.textContent = displayedPerMinute;
-        }
-
-
-        function togglePerformanceWarning(name, toggleTo) {
-            let list = {
-                'ping': 'performanceWarning',
-                'checks': 'performanceWarning_recommendation_checks',
-                'display': 'performanceWarning_recommendation_display'
-            }
-            let elem = document.getElementById(list[name])
-            if (toggleTo) {
-                elem.classList.add('visible');
-                if(name == 'ping') { performanceWarningShown = true; }
-            } else {
-                elem.classList.remove('visible');
-                if(name == 'ping') { performanceWarningShown = false; }
-            }
-        }
-
-        function updatePerformanceWarningText(name, text) {
-            let list = {
-                'ping': 'performanceWarning_text',
-                'checks': 'performanceWarning_recommendation_checks_text',
-                'display': 'performanceWarning_recommendation_display_text'
-            }
-            let elem = document.getElementById(list[name])
-            elem.textContent = text
-        }
-
-        // Performance monitoring
-        function checkPerformance(logReceivedAt, logDisplayedAt) {
-            // if last check less than 1s ago, skip
-            checkPerformanceLastCheck = Date.now();
-
-            // Check if we're falling behind (more than 50% lag or render time > 100ms)
-            const msBehind = (logDisplayedAt - logReceivedAt);
-            const isFallingBehind = msBehind > 500
-
-            if (isFallingBehind && !performanceWarningShown) {
-                togglePerformanceWarning('ping', true);
-            }
-
-            return msBehind
-        }
-
-        function getCheckPerformanceLastPingTimingSince() {
-            let value = Date.now() - checkPerformanceLastCheck
-            if (value < 1250) {
-                return value
-            }
-            return value
-        }
-
-        // Start statistics update interval
-        statsUpdateInterval = setInterval(() => {
-            updateStatistics();
-            updateCurrentDisplayedAmount()
-            
-            let perf_render = getPerfMonitoringAvg('render')
-            let perf_checks = getPerfMonitoringAvg('checks')
-            if(perf_render > 10 || perf_checks > 8) {
-                togglePerformanceWarning('checks', true);
-                updatePerformanceWarningText('checks', `Average render time: ${perf_render.toFixed(2)} ms\nAverage checks time: ${perf_checks.toFixed(2)} ms`)
-            } else {
-                togglePerformanceWarning('checks', false);
-            }
-
-            //
-            let lastPerfCheck = getCheckPerformanceLastPingTimingSince()
-            if(lastPerfCheck > 1250) {
-                console.log(`last check performance ping was too long (${lastPerfCheck} ms)`)
-                togglePerformanceWarning('ping', true);
-            }
-        }, 1000);
-
-        window.addEventListener('load', () => {
-            bufferValue.textContent = BUFFER_PRESETS[2].toLocaleString();
-            bufferInfo.textContent = BUFFER_PRESETS[2].toLocaleString();
-            fetchLogFiles();
-            renderChecksContainer();
-            renderChecksFilterContainer();
-            setTimeout(connect, 500);
-        });
-    </script>
+    <!-- Load modular JavaScript files -->
+    <script src="/assets/utils.js"></script>
+    <script src="/assets/dom-manager.js"></script>
+    <script src="/assets/toast.js"></script>
+    <script src="/assets/performance-monitor.js"></script>
+    <script src="/assets/checks-manager.js"></script>
+    <script src="/assets/log-renderer.js"></script>
+    <script src="/assets/settings-manager.js"></script>
+    <script src="/assets/websocket-manager.js"></script>
+    <script src="/assets/app.js"></script>
 </body>
 </html>
