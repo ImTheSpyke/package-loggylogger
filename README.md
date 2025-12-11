@@ -15,11 +15,11 @@ LoggyLogger is a standalone logging system with built-in web dashboard support. 
 ## 🖼️ Screenshots
 
 Full logging dashboard
-<br><img src="./github_assets/example1.png" height="200px" /><br>
+<br><img src="./github_assets/example1.png" height="400px" /><br>
 Custom code snippet checks
-<br><img src="./github_assets/example_check_add.png" height="200px" /><br>
+<br><img src="./github_assets/example_check_add.png" height="300px" /><br>
 Filter out logs by file and line range
-<br><img src="./github_assets/example_file_filtering.png" height="200px" /><br>
+<br><img src="./github_assets/example_file_filtering.png" height="300px" /><br>
 
 ## Install
 
