@@ -20,7 +20,7 @@ export interface TLoggyConfig {
 
 export type TLoggyConfigOptional = Partial<TLoggyConfig>
 
-export type TLogType = 'info' | 'warn' | 'error' | 'fatal' | 'success' | 'log' | 'debug' | 'verbose' | 'unknown'
+export type TLogType = 'info' | 'warn' | 'error' | 'fatal' | 'success' | 'log' | 'debug' | 'verbose' | 'silly' | 'unknown'
 
 export type TMultipleLogLineType = "base" | "mlstart" | "mlstep" | "mlend"
 

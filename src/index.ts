@@ -11,6 +11,7 @@ const noop = () => {}
 
 // Type for the public logger interface (only log methods)
 export interface LoggerInterface {
+    silly: (...args: unknown[]) => void
     verbose: (...args: unknown[]) => void
     debug: (...args: unknown[]) => void
     log: (...args: unknown[]) => void
@@ -314,6 +315,7 @@ export class LoggyLogger {
         // Helper to create a bound interface with extra boundDatas (merged on top of logger's boundDatas)
         const createBoundInterface = (extraBoundDatas: Record<string, unknown>): LoggerInterface => {
             const boundInterface: LoggerInterface = {
+                silly: (...args: unknown[]) => logger._sillyBound(extraBoundDatas, ...args),
                 verbose: (...args: unknown[]) => logger._verboseBound(extraBoundDatas, ...args),
                 debug: (...args: unknown[]) => logger._debugBound(extraBoundDatas, ...args),
                 log: (...args: unknown[]) => logger._logBound(extraBoundDatas, ...args),
@@ -340,6 +342,7 @@ export class LoggyLogger {
 
         // Build the public interface - only expose log methods
         const publicInterface: LoggerInterface = {
+            silly: (...args: unknown[]) => logger.silly(...args),
             verbose: (...args: unknown[]) => logger.verbose(...args),
             debug: (...args: unknown[]) => logger.debug(...args),
             log: (...args: unknown[]) => logger.log(...args),

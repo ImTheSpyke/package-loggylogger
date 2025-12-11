@@ -42,6 +42,33 @@ logger.error('Connection failed', new Error('timeout'))
 logger.debug('Request payload', requestData)
 ```
 
+## Log Levels
+
+9 levels from critical to silly:
+
+```js
+logger.fatal('System crash')        // Level 10 - Highest priority
+logger.error('Operation failed')    // Level 20
+logger.warn('Deprecation notice')   // Level 30
+logger.success('Task completed')    // Level 40
+logger.info('Status update')        // Level 50
+logger.log('General message')       // Level 60 - Default mode
+logger.debug('Debug info')          // Level 70
+logger.verbose('Detailed trace')    // Level 80
+logger.silly('Very precise trace')  // Level 90 - Lowest priority
+```
+
+Set the threshold level:
+
+```js
+// Only show logs at or above this level
+Loggy.setLevel(Loggy.LEVELS['7_DEBUG'])
+
+// Or via setConfig
+Loggy.setConfig({ level: Loggy.LEVELS['5_INFO'] })
+```
+
+
 ## Configuration
 
 ### Global Config
@@ -52,6 +79,9 @@ Use `setConfig()` to configure all loggers:
 import { Loggy } from 'loggylogger'
 
 Loggy.setConfig({
+    level: Loggy.LEVELS.DEFAULT, // 60, logs and above
+    colors: true,
+    emojis: true,
     showCallLines: true,
     colors: true,
     convertObjects: true,
@@ -157,32 +187,6 @@ Loggy.disableProduction()
 You may restart production later on without specifying again the config by simply doing
 ```js
 Loggy.enableProduction()
-```
-
-## Log Levels
-
-9 levels from critical to silly:
-
-```js
-logger.fatal('System crash')        // Level 10 - Highest priority
-logger.error('Operation failed')    // Level 20
-logger.warn('Deprecation notice')   // Level 30
-logger.success('Task completed')    // Level 40
-logger.info('Status update')        // Level 50
-logger.log('General message')       // Level 60 - Default mode
-logger.debug('Debug info')          // Level 70
-logger.verbose('Detailed trace')    // Level 80
-logger.silly('Very precise trace')  // Level 90 - Lowest priority
-```
-
-Set the threshold level:
-
-```js
-// Only show logs at or above this level
-Loggy.setLevel(Loggy.LEVELS['7_DEBUG'])
-
-// Or via setConfig
-Loggy.setConfig({ level: Loggy.LEVELS['5_INFO'] })
 ```
 
 ## Configuration Options

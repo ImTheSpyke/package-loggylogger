@@ -271,11 +271,22 @@ describe('Logger', () => {
             logger.verbose('test')
             expect(console.log).not.toHaveBeenCalled()
         })
+        it('should not log silly when at info level', () => {
+            const logger = new Logger({ level: LEVELS['5_INFO'] })
+            logger.silly('test')
+            expect(console.log).not.toHaveBeenCalled()
+        })
+        it('should not log log when at info level', () => {
+            const logger = new Logger({ level: LEVELS['5_INFO'] })
+            logger.log('test')
+            expect(console.log).not.toHaveBeenCalled()
+        })
     })
 
     describe('all log methods', () => {
-        it('should have all 8 log methods', () => {
-            const logger = new Logger({ level: LEVELS['8_VERBOSE'] })
+        it('should have all 9 log methods', () => {
+            const logger = new Logger({ level: LEVELS['9_SILLY'] })
+            expect(typeof logger.silly).toBe('function')
             expect(typeof logger.verbose).toBe('function')
             expect(typeof logger.debug).toBe('function')
             expect(typeof logger.log).toBe('function')
@@ -286,8 +297,9 @@ describe('Logger', () => {
             expect(typeof logger.fatal).toBe('function')
         })
 
-        it('should call all methods at verbose level', () => {
-            const logger = new Logger({ level: LEVELS['8_VERBOSE'] })
+        it('should call all methods at silly level', () => {
+            const logger = new Logger({ level: LEVELS['9_SILLY'] })
+            logger.silly('s')
             logger.verbose('v')
             logger.debug('d')
             logger.log('l')
@@ -296,7 +308,7 @@ describe('Logger', () => {
             logger.warn('w')
             logger.error('e')
             logger.fatal('f')
-            expect(console.log).toHaveBeenCalledTimes(8)
+            expect(console.log).toHaveBeenCalledTimes(9)
         })
     })
 
@@ -474,6 +486,7 @@ describe('LoggyLogger', () => {
         it('should create a logger interface', () => {
             const loggy = new LoggyLogger()
             const logger = loggy.createLogger()
+            expect(typeof logger.silly).toBe('function')
             expect(typeof logger.verbose).toBe('function')
             expect(typeof logger.debug).toBe('function')
             expect(typeof logger.log).toBe('function')
@@ -494,8 +507,8 @@ describe('LoggyLogger', () => {
 
         it('should accept config for logger', () => {
             const loggy = new LoggyLogger()
-            const logger = loggy.createLogger({ level: LEVELS['8_VERBOSE'] })
-            logger.verbose('verbose message')
+            const logger = loggy.createLogger({ level: LEVELS['9_SILLY'] })
+            logger.silly('verbose message')
             expect(console.log).toHaveBeenCalled()
         })
     })
@@ -544,13 +557,17 @@ describe('LoggyLogger', () => {
         it('should disable other methods in production by default', () => {
             const loggy = new LoggyLogger({ production: true })
             const logger = loggy.createLogger()
-            logger.info('info')
-            logger.debug('debug')
+            logger.silly('silly')
             logger.verbose('verbose')
+            logger.debug('debug')
             logger.log('log')
+            logger.info('info')
             logger.success('success')
             logger.warn('warn')
             expect(console.log).not.toHaveBeenCalled()
+            logger.error('error')
+            logger.fatal('fatal')
+            expect(console.log).toHaveBeenCalledTimes(2)
         })
 
         it('should enable specific methods via productionConfig', () => {

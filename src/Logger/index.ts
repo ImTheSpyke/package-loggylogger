@@ -9,10 +9,11 @@ type LineType = Types.Logger.TMultipleLogLineType
 
 const FIRST_CHARS: Record<LineType, string> = { base: '┃', mlstart: '┠', mlstep: '┇', mlend: '┇' }
 const EMOJI_MAPS: Record<'base' | 'mlstart', Record<LogType, Types.Logger.EmojiType>> = {
-    base: { verbose: 'empty__', debug: 'empty__', log: 'empty__', info: 'dot____', success: 'dot____', warn: 'warn___', error: 'cross__', fatal: 'cross__', unknown: 'interro' },
-    mlstart: { verbose: 'mlstart2', debug: 'mlstart2', log: 'mlstart2', info: 'dot____', success: 'dot____', warn: 'warn___', error: 'cross__', fatal: 'cross__', unknown: 'interro' }
+    base: { silly: 'empty__', verbose: 'empty__', debug: 'empty__', log: 'empty__', info: 'dot____', success: 'dot____', warn: 'warn___', error: 'cross__', fatal: 'cross__', unknown: 'interro' },
+    mlstart: { silly: 'mlstart2', verbose: 'mlstart2', debug: 'mlstart2', log: 'mlstart2', info: 'dot____', success: 'dot____', warn: 'warn___', error: 'cross__', fatal: 'cross__', unknown: 'interro' }
 }
 const LOG_PATTERNS: Record<LogType, [string, string, string]> = {
+    silly: ['{FgGray}', '{date} {line}  S ', ''],
     verbose: ['{FgGray}', '{date} {line}  V ', ''],
     debug: ['{FgGray}', '{date} {line}  D ', ''],
     log: ['{FgWhite}', '{date} {FgGray}{line}{Reset} {BgGray}{FgWhite} L {Reset}{FgWhite}', ''],
@@ -171,6 +172,7 @@ export class Logger {
         out.forEach(l => console.log(l))
     }
 
+    silly(...args: unknown[]) { if (this.localConfig.level >= LEVELS['9_SILLY']) this._log('silly', args) }
     verbose(...args: unknown[]) { if (this.localConfig.level >= LEVELS['8_VERBOSE']) this._log('verbose', args) }
     debug(...args: unknown[]) { if (this.localConfig.level >= LEVELS['7_DEBUG']) this._log('debug', args) }
     log(...args: unknown[]) { if (this.localConfig.level >= LEVELS['6_LOG']) this._log('log', args) }
@@ -181,6 +183,7 @@ export class Logger {
     fatal(...args: unknown[]) { if (this.localConfig.level >= LEVELS['1_FATAL']) this._log('fatal', args) }
 
     // Internal methods for bound logging (with extra boundDatas)
+    _sillyBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) { if (this.localConfig.level >= LEVELS['9_SILLY']) this._log('silly', args, false, extraBoundDatas) }
     _verboseBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) { if (this.localConfig.level >= LEVELS['8_VERBOSE']) this._log('verbose', args, false, extraBoundDatas) }
     _debugBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) { if (this.localConfig.level >= LEVELS['7_DEBUG']) this._log('debug', args, false, extraBoundDatas) }
     _logBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) { if (this.localConfig.level >= LEVELS['6_LOG']) this._log('log', args, false, extraBoundDatas) }
