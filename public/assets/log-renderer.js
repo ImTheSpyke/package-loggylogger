@@ -459,8 +459,8 @@ class LogRenderer {
             <div class="log-detail-section">
                 <h4>Bound Data</h4>
                 <pre id="logBoundDataContent">${useSyntax
-                    ? this.applySyntaxHighlight(Object.keys(boundDatas).length > 0 ? this.stringifyWithDepth(boundDatas, 5) : '(empty)')
-                    : DOM.escapeHtml(Object.keys(boundDatas).length > 0 ? this.stringifyWithDepth(boundDatas, 5) : '(empty)')}</pre>
+                    ? this.applySyntaxHighlight(Object.keys(boundDatas).length > 0 ? this.stringifyWithDepth(boundDatas, 5) : '{}')
+                    : DOM.escapeHtml(Object.keys(boundDatas).length > 0 ? this.stringifyWithDepth(boundDatas, 5) : '{}')}</pre>
             </div>
             <div class="log-detail-section">
                 <h4>Check Results${showExecTime ? ' (execution time)' : ''}</h4>

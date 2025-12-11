@@ -1,134 +1,97 @@
-import express from 'express'
-import { WebSocketServer } from 'ws'
-import { createServer } from 'http'
+import { createServer, Server, IncomingMessage, ServerResponse } from 'http'
+import { WebSocketServer, WebSocket } from 'ws'
+import { readFileSync } from 'fs'
+import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
-import { JSONBigInt } from './Utils/JSONBigInt.js'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const publicDir = join(__dirname, '..', 'public')
 
-/**
- * Start Express server and WebSocket server
- * @param port - Port number for the servers (default: 3000)
- * @returns Object containing the Express app, HTTP server, and WebSocket server
- */
-export function startServer(port: number = 3000) {
-    const app = express()
-    const server = createServer(app)
+// Track file paths where loggers have been created (unique set)
+const logFiles = new Set<string>()
 
+// Track the configured basePath
+let configuredBasePath: string | null = null
 
-    function getFile(relativePath: string) {
-        return join(__dirname, '..', 'public', relativePath)
-    }
+export function addLogFile(filePath: string) {
+    logFiles.add(filePath)
+}
 
-    // Serve static files from ./public/index.html
-    app.get('/', (_req, res) => {
-        res.sendFile(getFile('./index.html'))
-    })
+export function getLogFiles(): string[] {
+    return Array.from(logFiles)
+}
 
-    // Express route: serve "Hello world" on "/api"
-    app.get('/api', (_req, res) => {
-        res.send('Hello world')
-    })
-    app.get('/api/logFiles', (_req, res) => {
-        let list = [
-            "c:\\Users\\user\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
-            "c:\\Users\\user\\AppData\\Local\\Programs\\Microsoft VS Code\\CodeUtil.exe",
-            ".\\Workspace\\Code.exe",
-            ".\\Workspace\\dir1\\file1.txt",
-            ".\\Workspace\\dir1\\file2.txt",
-            ".\\Workspace\\dir1\\file3.txt",
-            ".\\Workspace\\dir2\\file1.txt",
-        ]
-        res.send(list)
-    })
-    app.get(/^\/assets\/.*/, (req, res) => {
-        console.log("/assets called with:", req.path)
-        res.sendFile(getFile(req.path))
-    })
+export function setBasePath(basePath: string | undefined) {
+    configuredBasePath = basePath ?? null
+}
 
-    // WebSocket server
-    const wss = new WebSocketServer({ server })
+export function getBasePath(): string | null {
+    return configuredBasePath
+}
 
-    // Store all connected clients
-    const clients = new Set<any>()
+const MIME: Record<string, string> = {
+    '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css',
+    '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml'
+}
 
-    wss.on('connection', (ws) => {
-        console.log('WebSocket client connected')
-        clients.add(ws)
-
-        ws.on('message', (message) => {
-            console.log('Received:', message.toString())
-            try {
-                let json_msg = JSON.parse(message.toString())
-                ws.send(JSON.stringify({
-                    type: 'pong',
-                    timestamp: json_msg.timestamp,
-                    server: (new Date()).toISOString()
-                }))
-            } catch (error) {
-                console.error('Error parsing message:', error)
-            }
-        })
-
-        ws.on('close', () => {
-            console.log('WebSocket client disconnected')
-            clients.delete(ws)
-        })
-
-        ws.on('error', (error) => {
-            console.error('WebSocket error:', error)
-            clients.delete(ws)
-        })
-    })
-
-    function sendDataToClients(datas: any) {
-        const message = JSONBigInt.stringify(datas)
-        
-        clients.forEach((client) => {
-            if (client.readyState === 1) { // WebSocket.OPEN
-                try {
-                    client.send(message)
-                } catch (error) {
-                    console.error('Error sending log to client:', error)
-                    clients.delete(client)
-                }
-            }
-        })
-    }
-
-
-    /**
-     * Broadcast a log entry to all connected WebSocket clients
-     * @param type - Log type (info, warn, error, etc.)
-     * @param callLine - Call line information
-     * @param argList - Array of arguments to log
-     * @param date - Optional Date object to include in the log (defaults to current date)
-     */
-    function broadcastLog(type: string, callLine: string, date: Date, argList: any[], boundDatas?: any): void {
-        const logData = {
-            type,
-            callLine,
-            date: date ? date.toISOString() : new Date().toISOString(),
-            argList,
-            boundDatas: boundDatas ?? {}
-        }
-        
-        sendDataToClients(logData)
-    }
-
-    // Start the server
-    server.listen(port, () => {
-        console.log(`Server started on http://localhost:${port}`)
-        console.log(`WebSocket server ready on ws://localhost:${port}`)
-    })
-
-    return {
-        app,
-        server,
-        wss,
-        broadcastLog
+function serveFile(res: ServerResponse, path: string) {
+    try {
+        const ext = path.substring(path.lastIndexOf('.'))
+        res.writeHead(200, { 'Content-Type': MIME[ext] || 'text/plain' })
+        res.end(readFileSync(join(publicDir, path)))
+    } catch {
+        res.writeHead(404)
+        res.end('Not Found')
     }
 }
 
+export interface DashboardServer {
+    server: Server
+    wss: WebSocketServer
+    broadcast: (type: string, callLine: string, date: Date, args: unknown[], boundData?: unknown) => void
+    close: () => void
+}
+
+export function startServer(port = 11000): DashboardServer {
+    const clients = new Set<WebSocket>()
+
+    const server = createServer((req: IncomingMessage, res: ServerResponse) => {
+        const url = req.url || '/'
+        if (url === '/' || url === '/index.html') return serveFile(res, 'index.html')
+        if (url.startsWith('/assets/')) return serveFile(res, url)
+        if (url === '/api') { res.writeHead(200); res.end('OK'); return }
+        if (url === '/api/logFiles') {
+            res.writeHead(200, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ files: getLogFiles(), basePath: getBasePath() }))
+            return
+        }
+        res.writeHead(404); res.end('Not Found')
+    })
+
+    const wss = new WebSocketServer({ server })
+
+    wss.on('connection', (ws) => {
+        clients.add(ws)
+        ws.on('message', (msg) => {
+            try {
+                const data = JSON.parse(msg.toString())
+                if (data.type === 'ping') ws.send(JSON.stringify({ type: 'pong', timestamp: data.timestamp, server: new Date().toISOString() }))
+            } catch {}
+        })
+        ws.on('close', () => clients.delete(ws))
+        ws.on('error', () => clients.delete(ws))
+    })
+
+    const broadcast = (type: string, callLine: string, date: Date, args: unknown[], boundData?: unknown) => {
+        const msg = JSON.stringify({ type, callLine, date: date.toISOString(), argList: args, boundDatas: boundData ?? {} },
+            (_k, v) => typeof v === 'bigint' ? { _type: 'bigint', _value: v.toString() } : v)
+        clients.forEach(c => { if (c.readyState === WebSocket.OPEN) c.send(msg) })
+    }
+
+    server.listen(port)
+
+    return {
+        server, wss, broadcast,
+        close: () => { clients.forEach(c => c.close()); server.close() }
+    }
+}

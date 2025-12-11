@@ -27,6 +27,22 @@ class LoggyLoggerApp {
         this.BUFFER_PRESETS = [100, 500, 1000, 5000, 10000, 50000];
     }
 
+    sortAndTrimAvailableFiles() {
+        let mapClearSlashes = this._availableFiles.map(f => f.replace(/\\/g, '/'));
+        let sorted = Utils.sortFiles(mapClearSlashes)
+        this._availableFiles = sorted.filter((f,i) => sorted.indexOf(f) == i);
+    }
+
+    addAvailableFile(file) {
+        if(!file) return;
+        let fileCommonSlashes = file.replace(/\\/g, '/')
+        if (!this._availableFiles.includes(fileCommonSlashes)) {
+            this._availableFiles.push(fileCommonSlashes);
+            this.sortAndTrimAvailableFiles();
+            this._renderFileList();
+        }
+    }
+
     /**
      * Initialize the application
      */
@@ -39,6 +55,9 @@ class LoggyLoggerApp {
 
         // Load initial data
         this._fetchLogFiles();
+        setTimeout(() => { // Fetch again once everything loaded
+            this._fetchLogFiles();
+        }, 1000)
         this._renderChecksContainer();
         this._renderChecksFilterContainer();
         this._updateLogLevelButtons();
@@ -352,11 +371,7 @@ class LoggyLoggerApp {
 
         // Update file list if new file
         const file = Utils.getFileFromCallLine(logData.callLine);
-        if (file && !this._availableFiles.includes(file)) {
-            this._availableFiles.push(file);
-            this._availableFiles = Utils.sortFiles(this._availableFiles);
-            this._renderFileList();
-        }
+        this.addAvailableFile(file);
 
         // Remove empty state
         const emptyState = DOM.get('logsContainer').querySelector('.empty-state');
@@ -609,9 +624,17 @@ class LoggyLoggerApp {
         try {
             const response = await fetch('/api/logFiles');
             if (response.ok) {
-                const files = await response.json();
-                this._availableFiles = Utils.sortFiles(files);
-                this._renderFileList();
+                const datas = await response.json();
+                /*
+                datas = {
+                    files: string[],
+                    basePath: string | null
+                }
+                */
+                let mappedFiles = Utils.sortFiles(datas.files)
+                    .map(f => `${datas.basePath ? f.replace(datas.basePath, '.') : f}`)
+                mappedFiles.forEach(f => this.addAvailableFile(f))
+
             } else {
                 DOM.setHtml('fileList', '<div class="empty-state" style="padding: 15px; font-size: 11px;">Failed to load files</div>');
             }
