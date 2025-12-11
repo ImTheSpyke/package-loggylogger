@@ -2,7 +2,7 @@
   "name": "loggylogger",
   "author": "ImTheSpyke",
   "private": false,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Fully customizable Logger module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

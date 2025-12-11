@@ -9,7 +9,7 @@ console.log(__dirname)
 
 
 Loggy.setConfig({
-    level: Loggy.LEVELS.DEFAULT,
+    level: Loggy.LEVELS['9_SILLY'],
     colors: true,
     emojis: true,
     "showCallLines": true,
@@ -22,32 +22,14 @@ Loggy.setConfig({
 
 console.log("process.cwd()", process.cwd())
 
-Loggy.enableProduction({
-    logLevels: {
-        debug: true,
-        info: true,
-        warn: true,
-        error: true,
-        fatal: true,
-    },
-    "showCallLines": true,
-    "colors": true,
-    "convertObjects": true,
-    "convertObjectsColorized": true,
-    "convertObjectsDepth": 2,
-    dashboard: true,
-}, 10000)
 
 
 const Logger = Loggy.createLogger({
     colors:false
 }).bind({ loggerDatas: 10})
 
-Logger.fatal("hello")
-setTimeout(() => {
+Logger.silly("hello")
 
-Loggy.disableProduction()
-}, 100)
 
 function getRandomType() {
     let types = ["log","info","warn","error","debug"]
