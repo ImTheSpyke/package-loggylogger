@@ -115,7 +115,7 @@ const debugLogger = Loggy.createLogger({
 
 ### Bound Data
 
-Attach persistent metadata to a logger using the second parameter or `.bind()`:
+Attach persistent metadata to a logger using the second parameter or `.bind()`:<br>
 _This is espacially usefull to make logging groups accross files to show at once on dashboard_
 ```js
 // Attach data at creation
@@ -153,29 +153,31 @@ Loggy.stopDashboard()
 
 ## Production Mode
 
-Enable production mode to disable heavy features and only log critical messages:
+Enable production mode to disable heavy features and only log critical messages:<br>
 _When set to false, functionnalities are replaced by empty functions to remove avoid processing_
 ```js
 import { Loggy } from 'loggylogger'
 
-Loggy.enableProduction({
-    // Enable/disable specific log levels.
-    logs: {
-        fatal: true,
-        error: true,
-        warn: true,
-        info: false,
-        debug: false
-    },
-    // Override settings in production.
-    settings: {
-        colors: false,
-        objectInspect: false,
-        callLine: false
-    },
-    // Optionally enable dashboard in production
-    dashboard: false
-}, 11000)  // Optionnal, dashboard port if enabled (default: 11000)
+if(process.env.NODE_ENV == 'production') {
+    Loggy.enableProduction({
+        // Enable/disable specific log levels.
+        logs: {
+            fatal: true,
+            error: true,
+            warn: true,
+            info: false,
+            debug: false
+        },
+        // Override settings in production.
+        settings: {
+            colors: false,
+            objectInspect: false,
+            callLine: false
+        },
+        // Optionally enable dashboard in production
+        dashboard: false
+    }, 11000)  // Optionnal, dashboard port if enabled (default: 11000)
+}
 ```
 
 Disable production mode on runtime (not fully supported & not recommended):

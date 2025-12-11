@@ -409,4 +409,5 @@ export class LoggyLogger {
 // Default instance
 const Loggy = new LoggyLogger()
 
+export default Loggy
 export { Loggy }
