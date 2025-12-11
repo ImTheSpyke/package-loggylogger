@@ -22,14 +22,11 @@ Loggy.setConfig({
 
 console.log("process.cwd()", process.cwd())
 
-
-
-const Logger = Loggy.createLogger({
-    colors:false
-}).bind({ loggerDatas: 10})
+const Logger = Loggy.createLogger().bind({ loggerDatas: 10})
 
 Logger.silly("hello")
 
+Loggy.startDashboard()
 
 function getRandomType() {
     let types = ["log","info","warn","error","debug"]
@@ -49,4 +46,13 @@ setInterval(() => {
     Logger.fatal("fatality","hello")
     Logger.bind({ logdatas:1111}).log('arg1', { key: 'value', someList: [1,2,3,4,"hello","yes", 18n], myData: { "no": true, "yes": false}})
 
+Logger.fatal('System crash')        // Level 10 - Highest priority
+Logger.error('Operation failed')    // Level 20
+Logger.warn('Deprecation notice')   // Level 30
+Logger.success('Task completed')    // Level 40
+Logger.info('Status update')        // Level 50
+Logger.log('General message')       // Level 60 - Default mode
+Logger.debug('Debug info')          // Level 70
+Logger.verbose('Detailed trace')    // Level 80
+Logger.silly('Very precise trace')  // Level 90 - Lowest priority
 }, 1000)
