@@ -9,14 +9,14 @@
   "type": "module",
   "files": [
     "dist",
+    "public",
     "README.md"
   ],
   "scripts": {
     "start": "node dist/index.js",
     "build": "tsup src/index.ts --format esm,cjs --dts",
-    "test": "vitest",
+    "test": "vitest run",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run",
     "pub": "npm publish --access public"
   },
   "repository": {
