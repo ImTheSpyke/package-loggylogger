@@ -665,4 +665,49 @@ describe('Loggy (default instance)', () => {
     it('should have LEVELS', () => {
         expect(Loggy.LEVELS).toBe(LEVELS)
     })
+
+
+    it('should not crash', () => {
+        const Loggy2 = new LoggyLogger()
+        Loggy2.setConfig({
+            level: Loggy.LEVELS['9_SILLY'],
+            colors: true,
+            emojis: true,
+            "showCallLines": true,
+            "convertObjects": true,
+            "convertObjectsColorized": true,
+            "convertObjectsDepth": 2,
+            "basePath": __dirname
+        })
+
+        const Logger = Loggy2.createLogger()
+
+        Logger.silly("hello")
+        Logger.verbose("hello")
+        Logger.debug("hello")
+        Logger.log("hello")
+        Logger.info("hello")
+        Logger.success("hello")
+        Logger.warn("hello")
+        Logger.error("hello")
+        Logger.fatal("hello")
+
+        expect(console.log).toHaveBeenCalledTimes(9)
+
+    })
+})
+
+// ============================================================================
+// Dashboard
+// ============================================================================
+describe('Dashboard', () => {
+
+    it('should start dashboard', () => {
+        const loggy = new LoggyLogger()
+        loggy.startDashboard()
+        expect((loggy as any)._server).toBeDefined()
+        console.log('loggy: ', (loggy as any)._server)
+    })
+    
+
 })
