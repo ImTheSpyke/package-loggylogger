@@ -1,4 +1,4 @@
-import util from 'util'
+import util from 'node:util'
 import * as Types from '../types/index.js'
 import { colors } from './colors.js'
 import { emojis } from './emojis.js'

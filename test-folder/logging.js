@@ -13,7 +13,6 @@ Loggy.setConfig({
     colors: true,
     emojis: true,
     "showCallLines": true,
-    "colors": true,
     "convertObjects": true,
     "convertObjectsColorized": true,
     "convertObjectsDepth": 2,

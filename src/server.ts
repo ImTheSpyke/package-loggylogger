@@ -1,8 +1,8 @@
-import { createServer, Server, IncomingMessage, ServerResponse } from 'http'
+import { createServer, Server, IncomingMessage, ServerResponse } from 'node:http'
 import { WebSocketServer, WebSocket } from 'ws'
-import { readFileSync } from 'fs'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { readFileSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const publicDir = join(__dirname, '..', 'public')
