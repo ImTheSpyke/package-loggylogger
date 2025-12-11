@@ -483,7 +483,7 @@ class LoggyLoggerApp {
         const container = DOM.get('logsContainer');
 
         // Clear container except scroll indicator and back button
-        container.innerHTML = '';
+        container.replaceChildren();
         const scrollIndicator = DOM.create('div', {
             className: 'scroll-indicator',
             id: 'scrollIndicator',
@@ -652,11 +652,22 @@ class LoggyLoggerApp {
         const fileList = DOM.get('fileList');
 
         if (filtered.length === 0) {
-            fileList.innerHTML = '<div class="empty-state" style="padding: 15px; font-size: 11px;">No files match</div>';
+            // Clear existing children
+            fileList.replaceChildren();
+
+            // Create the empty state div
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'empty-state';
+            emptyDiv.style.padding = '15px';
+            emptyDiv.style.fontSize = '11px';
+            emptyDiv.textContent = 'No files match';
+
+            // Append it
+            fileList.appendChild(emptyDiv);
             return;
         }
 
-        fileList.innerHTML = '';
+        fileList.replaceChildren();
 
         filtered.forEach(file => {
             const item = DOM.create('div', {
@@ -670,7 +681,11 @@ class LoggyLoggerApp {
 
             const namePart = DOM.create('span', { className: 'file-name-part' });
             if (directory) {
-                namePart.innerHTML = `<span class="directory">${directory}/</span>${fileName}`;
+                namePart.replaceChildren();
+                const emptySpan = document.createElement('span');
+                emptySpan.className = 'directory';
+                emptySpan.textContent = directory + '/';
+                namePart.appendChild(emptySpan);
             } else {
                 namePart.textContent = fileName;
             }
@@ -738,7 +753,7 @@ class LoggyLoggerApp {
 
     _renderLineRanges(ranges) {
         const container = DOM.get('lineRangesContainer');
-        container.innerHTML = '';
+        container.replaceChildren();
 
         if (ranges.length === 0) ranges = [[null, null]];
 
@@ -812,11 +827,20 @@ class LoggyLoggerApp {
         const checks = ChecksManager.getAll();
 
         if (checks.length === 0) {
-            container.innerHTML = '<div style="font-size: 11px; color: #858585; padding: 10px; text-align: center;">No checks defined</div>';
+            container.replaceChildren();
+
+            const msg = document.createElement('div')
+            msg.textContent = 'No checks defined',
+            msg.style.fontSize = '11px',
+            msg.style.color = '#858585',
+            msg.style.padding = '10px',
+            msg.style.textAlign ='center'
+
+            container.appendChild(msg);
             return;
         }
 
-        container.innerHTML = '';
+        container.replaceChildren();
 
         checks.forEach(check => {
             const stats = ChecksManager.getExecutionTimeStats(check.id);
@@ -914,11 +938,18 @@ class LoggyLoggerApp {
         const filter = ChecksManager.getFilter();
 
         if (enabledChecks.length === 0) {
-            container.innerHTML = '<span style="font-size: 11px; color: #666;">No checks enabled</span>';
+            container.replaceChildren();
+
+            const emptySpan = document.createElement('span');
+            emptySpan.style.fontSize = '11px';
+            emptySpan.style.color = '#666';
+            emptySpan.textContent = 'No checks enabled';
+            container.appendChild(emptySpan);
+
             return;
         }
 
-        container.innerHTML = '';
+        container.replaceChildren()
 
         enabledChecks.forEach(check => {
             const chip = DOM.create('span', {
@@ -984,11 +1015,11 @@ class LoggyLoggerApp {
         const resultsContainer = DOM.get('checksResults');
 
         if (enabledChecks.length === 0) {
-            resultsContainer.innerHTML = '';
+            resultsContainer.replaceChildren();
             return;
         }
 
-        resultsContainer.innerHTML = '';
+        resultsContainer.replaceChildren();
         const visibleLogs = this._logs.filter(log => this._shouldShowLog(log));
 
         enabledChecks.forEach(check => {
