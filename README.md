@@ -36,10 +36,16 @@ import { Loggy } from 'loggylogger'
 const logger = Loggy.createLogger()
 
 // Start logging
-logger.info('Server started')
+logger.log('Server started')
 logger.warn('Cache miss', { userId: 42 })
 logger.error('Connection failed', new Error('timeout'))
 logger.debug('Request payload', requestData)
+
+// Debug on the dashboard by enabling it
+Loggy.startDashboard(3000) // default port is 11000
+// Attach debug datas to your logs
+logger.bind({ service: 'auth', child_process: 2 }).info('Auth system started.')
+
 ```
 
 ## Log Levels
@@ -251,4 +257,5 @@ Loggy.LEVELS = {
 | `log(...args)` | Log general message |
 | `debug(...args)` | Log debug info |
 | `verbose(...args)` | Log verbose details |
+| `silly(...args)` | Log silly details |
 | `bind(data)` | Create logger with additional bound data |
