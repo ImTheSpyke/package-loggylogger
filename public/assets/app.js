@@ -37,7 +37,7 @@ class LoggyLoggerApp {
         if(!file) return;
         let fileCommonSlashes = file.replace(/\\/g, '/')
         if (!this._availableFiles.includes(fileCommonSlashes)) {
-            this._availableFiles.push(fileCommonSlashes);
+            this._availableFiles.push(decodeURIComponent(fileCommonSlashes));
             this.sortAndTrimAvailableFiles();
             this._renderFileList();
         }
