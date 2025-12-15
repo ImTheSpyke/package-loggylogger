@@ -56,9 +56,12 @@ export class Logger {
         return this._useGlobal ? Logger.globalConfig : { ...Logger.globalConfig, ...this._overrides }
     }
 
+    getBoundDatas() { return this._boundDatas }
+
     static get conf() {
         return {
             set: (c: Types.Logger.TLoggyConfigOptional) => { Logger.globalConfig = { ...Logger.globalConfig, ...c } },
+            get: () => Logger.globalConfig,
             setLevel: (l: number) => { Logger.globalConfig.level = l },
             getLevel: () => Logger.globalConfig.level,
             toggleColors: (v?: boolean) => { Logger.globalConfig.colors = v ?? !Logger.globalConfig.colors }
@@ -73,7 +76,7 @@ export class Logger {
         }
     }
 
-    reloadConfig() { this._overrides = undefined }
+    clearConfig() { this._overrides = undefined }
 
     private _getStartChar(type: LogType, line: LineType): string {
         const first = FIRST_CHARS[line]
