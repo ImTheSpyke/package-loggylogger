@@ -3,7 +3,7 @@
   "author": "ImTheSpyke",
   "private": false,
   "version": "1.2.3",
-  "description": "Fully customizable Logger module",
+  "description": "A standalone logging system with built-in web dashboard support. No external APIs, no cloud services - just import and log.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
