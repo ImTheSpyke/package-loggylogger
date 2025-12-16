@@ -200,6 +200,8 @@ export class LoggyLogger {
     getLevel() { return Logger.conf.getLevel() }
     getBasePath() { return this._basePath }
 
+    getDashboardServer() { return this._server }
+
     // Dashboard
     startDashboard(port = 11000) {
         if (this._production && !this._prodConfig.dashboard) return
