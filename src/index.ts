@@ -21,6 +21,7 @@ export interface LoggerInterface {
     error: (...args: unknown[]) => void
     fatal: (...args: unknown[]) => void
     bind: (boundDatas: Record<string, unknown>) => LoggerInterface
+    _instance: Logger
 }
 
 export interface LoggyConfig {
@@ -37,8 +38,8 @@ export interface LoggyConfig {
 
 export interface ProductionConfig {
     dashboard?: boolean
-    logs?: { fatal?: boolean; error?: boolean; warn?: boolean; success?: boolean; info?: boolean; log?: boolean; debug?: boolean; verbose?: boolean }
-    settings?: { colors?: boolean; objectInspect?: boolean; callLine?: boolean; basePath?: string }
+    logs?: { fatal?: boolean; error?: boolean; warn?: boolean; success?: boolean; info?: boolean; log?: boolean; debug?: boolean; verbose?: boolean, silly?: boolean }
+    settings?: { colors?: boolean; objectInspect?: boolean; showCallLines?: boolean; basePath?: string }
 }
 
 export interface LoggyOptions {
@@ -109,7 +110,7 @@ function parseStackLine(stackLine: string): { filePath: string; lineNumber: numb
  * Removes the base path prefix and replaces it with "./"
  * Works cross-platform using node:path for normalization.
  */
-function applyBasePath(filePath: string, basePath: string | undefined): string {
+export function applyBasePath(filePath: string, basePath: string | undefined): string {
     if (!basePath) return filePath
 
     // Normalize both paths for cross-platform comparison
@@ -197,7 +198,9 @@ export class LoggyLogger {
     }
     setLevel(level: number) { Logger.conf.setLevel(level) }
     getLevel() { return Logger.conf.getLevel() }
-    toggleColors(value?: boolean) { Logger.conf.toggleColors(value) }
+    getBasePath() { return this._basePath }
+
+    getDashboardServer() { return this._server }
 
     // Dashboard
     startDashboard(port = 11000) {
@@ -223,7 +226,7 @@ export class LoggyLogger {
             Logger.conf.set({
                 colors: config.settings.colors ?? false,
                 convertObjects: config.settings.objectInspect ?? false,
-                showCallLines: config.settings.callLine ?? false
+                showCallLines: config.settings.showCallLines ?? false
             })
             // Apply basePath from production settings (normalized)
             if (config.settings.basePath !== undefined) {
@@ -250,7 +253,7 @@ export class LoggyLogger {
     // Create logger with production-aware optimizations
     createLogger(config?: LoggyConfig, boundDatas: Record<string, unknown> = {}): LoggerInterface {
         const logger = new Logger(config, false, boundDatas)
-        const logMethods: Types.Logger.TLogType[] = ['fatal', 'error', 'warn', 'success', 'info', 'log', 'debug', 'verbose']
+        const logMethods: Types.Logger.TLogTypeList = ['fatal', 'error', 'warn', 'success', 'info', 'log', 'debug', 'verbose', 'silly', 'unknown']
 
         // Determine basePath: per-logger config takes precedence over global (normalize it)
         const loggerBasePath = config?.basePath !== undefined ? normalizeBasePath(config.basePath) : undefined
@@ -324,7 +327,8 @@ export class LoggyLogger {
                 warn: (...args: unknown[]) => logger._warnBound(extraBoundDatas, ...args),
                 error: (...args: unknown[]) => logger._errorBound(extraBoundDatas, ...args),
                 fatal: (...args: unknown[]) => logger._fatalBound(extraBoundDatas, ...args),
-                bind: (moreBoundDatas: Record<string, unknown>) => createBoundInterface({ ...extraBoundDatas, ...moreBoundDatas })
+                bind: (moreBoundDatas: Record<string, unknown>) => createBoundInterface({ ...extraBoundDatas, ...moreBoundDatas }),
+                _instance: logger
             }
 
             // In production mode, override disabled methods with noop
@@ -351,7 +355,8 @@ export class LoggyLogger {
             warn: (...args: unknown[]) => logger.warn(...args),
             error: (...args: unknown[]) => logger.error(...args),
             fatal: (...args: unknown[]) => logger.fatal(...args),
-            bind: (extraBoundDatas: Record<string, unknown>) => createBoundInterface(extraBoundDatas)
+            bind: (extraBoundDatas: Record<string, unknown>) => createBoundInterface(extraBoundDatas),
+            _instance: logger
         }
 
         // In production mode, override disabled methods with noop
