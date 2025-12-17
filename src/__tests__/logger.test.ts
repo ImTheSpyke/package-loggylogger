@@ -174,7 +174,7 @@ describe('Logger', () => {
             const logger = Loggy.createLogger({ level: Loggy.LEVELS['7_DEBUG'] }, { foo: 'bar' })
 
             const logBoundMock = vi.fn((boundDatas, ...args) => {
-                console.log("bound", boundDatas)
+                console.log("bound", boundDatas, ...args)
             })
 
             logger._instance._logBound = logBoundMock
@@ -190,7 +190,7 @@ describe('Logger', () => {
             const logger = Loggy.createLogger({ level: Loggy.LEVELS['7_DEBUG'] }, { foo: 'bar' })
             
             const logBoundMock = vi.fn((boundDatas, ...args) => {
-                console.log("bound", boundDatas)
+                console.log("bound", boundDatas, ...args)
             })
 
             logger._instance._logBound = logBoundMock
@@ -922,7 +922,7 @@ describe('LoggyLogger', () => {
             const logger = loggy.createLogger()
 
             const logBoundMock = vi.fn((boundDatas, ...args) => {
-                console.log('bound', boundDatas)
+                console.log("bound", boundDatas, ...args)
             })
             logger._instance._logBound = logBoundMock
 
@@ -940,7 +940,7 @@ describe('LoggyLogger', () => {
             const logger = loggy.createLogger({ level: Loggy.LEVELS['9_SILLY'] })
             
             const logBoundMock = vi.fn((boundDatas, ...args) => {
-                console.log("bound", boundDatas)
+                console.log("bound", boundDatas, ...args)
             })
             logger._instance._logBound = logBoundMock
 
@@ -1250,14 +1250,88 @@ describe('Loggy (default instance)', () => {
 // ============================================================================
 describe('Dashboard', () => {
 
+    beforeEach(() => {
+        vi.resetModules()
+        vi.resetAllMocks()
+    })
+
     it('should start dashboard', () => {
-        const loggy = new LoggyLogger()
+        let loggy:any = new LoggyLogger()
         loggy.startDashboard()
         expect((loggy as any)._server).toBeDefined()
         console.log('loggy: ', (loggy as any)._server)
+        loggy.stopDashboard()
     })
 
-    it('should not start')
-    
+    it('should not start dashboard in production mode by default', () => {
+        let loggy:any = new LoggyLogger({ production: true })
+        expect((loggy as any)._server).toBeNullable()
+        loggy.enableProduction({
+            dashboard: false
+        })
+        expect((loggy as any)._server).toBeNullable()
+        loggy.stopDashboard()
+    })
+
+    it('should start dashboard in production if specified', () => {
+        let loggy:any = new LoggyLogger({ production: true })
+        expect((loggy as any)._server).toBeNullable()
+        loggy.enableProduction({
+            dashboard: true
+        })
+        expect((loggy as any)._server).toBeDefined()
+        let address1_object = loggy.getDashboardServer()?.server?.address()
+        let address1 = typeof address1_object === 'object' ? address1_object?.port : address1_object
+        expect(address1).toBe(11000)
+        loggy.stopDashboard()
+    })
+
+    it('should start dashboard on specific port', () => {
+        let loggy1 = new LoggyLogger()
+        loggy1.startDashboard(5678)
+        expect(loggy1.getDashboardServer()).toBeDefined()
+        let address1_object = loggy1.getDashboardServer()?.server?.address()
+        let address1 = typeof address1_object === 'object' ? address1_object?.port : address1_object
+        expect(address1).toBe(5678)
+        loggy1.stopDashboard()
+
+        // Test with another port
+        
+        let loggy2 = new LoggyLogger()
+        loggy2.startDashboard(8775)
+        expect(loggy2.getDashboardServer()).toBeDefined()
+        let address2_object = loggy2.getDashboardServer()?.server?.address()
+        let address2 = typeof address2_object === 'object' ? address2_object?.port : address2_object
+        expect(address2).toBe(8775)
+        loggy2.stopDashboard()
+    })
+
+    it('should start dashboard on specific port on production if enabled', async () => {
+        let loggy1 = new LoggyLogger()
+        loggy1.enableProduction({
+            dashboard: true
+        }, 5691)
+        expect(loggy1.getDashboardServer()).toBeDefined()
+        let address1_object = loggy1.getDashboardServer()?.server?.address()
+        let address1 = typeof address1_object === 'object' ? address1_object?.port : address1_object
+        expect(address1).toBe(5691)
+
+        loggy1.stopDashboard()
+        loggy1.disableProduction()
+
+        // Test with another port
+        
+        let loggy2 = new LoggyLogger()
+        loggy2.enableProduction({
+            dashboard: true
+        }, 9778)
+        expect(loggy2.getDashboardServer()).toBeDefined()
+        let address2_object = loggy2.getDashboardServer()?.server?.address()
+        let address2 = typeof address2_object === 'object' ? address2_object?.port : address2_object
+        expect(address2).toBe(9778)
+
+        loggy2.stopDashboard()
+        loggy2.disableProduction()
+    })
 
 })
