@@ -71,5 +71,3 @@ logger3.info("3",obj)
 logger4.info("4",obj)
 logger5.info("5",obj)
 logger6.info("6",obj)
-
-console.log("hi:\x1b[ \x1b[\x1b[" )
