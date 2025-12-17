@@ -2,7 +2,7 @@
   "name": "loggylogger",
   "author": "ImTheSpyke",
   "private": false,
-  "version": "1.2.3",
+  "version": "1.3.0",
   "description": "A standalone logging system with built-in web dashboard support. No external APIs, no cloud services - just import and log.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
