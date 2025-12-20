@@ -122,12 +122,10 @@ export class Logger {
         } catch { return '!error!' }
     }
 
-    private _log(type: LogType, args: unknown[], skipBroadcast = false, extraBoundDatas: Record<string, unknown> = {}): void {
+    private _log(type: LogType, args: unknown[]): void {
         const date = new Date(), line = this._getCallLine(), cfg = this.localConfig
-        const mergedBoundDatas = { ...this._boundDatas, ...extraBoundDatas }
 
         // Broadcast to websocket if available
-        if (!skipBroadcast && this._broadcast) this._broadcast(type, line, date, args, mergedBoundDatas)
         const patterns: Record<LineType, string> = {
             base: this._buildPattern(type, 'base', date, line),
             mlstart: this._buildPattern(type, 'mlstart', date, line),
@@ -221,39 +219,39 @@ export class Logger {
     // Internal methods for bound logging (with extra boundDatas)
     _sillyBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) {
         this.tryBroadcast('silly', args, extraBoundDatas)
-        if (this.localConfig.level >= LEVELS['9_SILLY']) this._log('silly', args, false, extraBoundDatas)
+        if (this.localConfig.level >= LEVELS['9_SILLY']) this._log('silly', args)
     }
     _verboseBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) {
         this.tryBroadcast('verbose', args, extraBoundDatas)
-        if (this.localConfig.level >= LEVELS['8_VERBOSE']) this._log('verbose', args, false, extraBoundDatas)
+        if (this.localConfig.level >= LEVELS['8_VERBOSE']) this._log('verbose', args)
     }
     _debugBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) {
         this.tryBroadcast('debug', args, extraBoundDatas)
-        if (this.localConfig.level >= LEVELS['7_DEBUG']) this._log('debug', args, false, extraBoundDatas)
+        if (this.localConfig.level >= LEVELS['7_DEBUG']) this._log('debug', args)
     }
     _logBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) {
         this.tryBroadcast('log', args, extraBoundDatas)
-        if (this.localConfig.level >= LEVELS['6_LOG']) this._log('log', args, false, extraBoundDatas)
+        if (this.localConfig.level >= LEVELS['6_LOG']) this._log('log', args)
     }
     _infoBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) {
         this.tryBroadcast('info', args, extraBoundDatas)
-        if (this.localConfig.level >= LEVELS['5_INFO']) this._log('info', args, false, extraBoundDatas)
+        if (this.localConfig.level >= LEVELS['5_INFO']) this._log('info', args)
     }
     _successBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) {
         this.tryBroadcast('success', args, extraBoundDatas)
-        if (this.localConfig.level >= LEVELS['4_SUCCESS']) this._log('success', args, false, extraBoundDatas)
+        if (this.localConfig.level >= LEVELS['4_SUCCESS']) this._log('success', args)
     }
     _warnBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) {
         this.tryBroadcast('warn', args, extraBoundDatas)
-        if (this.localConfig.level >= LEVELS['3_WARN']) this._log('warn', args, false, extraBoundDatas)
+        if (this.localConfig.level >= LEVELS['3_WARN']) this._log('warn', args)
     }
     _errorBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) {
         this.tryBroadcast('error', args, extraBoundDatas)
-        if (this.localConfig.level >= LEVELS['2_ERROR']) this._log('error', args, false, extraBoundDatas)
+        if (this.localConfig.level >= LEVELS['2_ERROR']) this._log('error', args)
     }
     _fatalBound(extraBoundDatas: Record<string, unknown>, ...args: unknown[]) {
         this.tryBroadcast('fatal', args, extraBoundDatas)
-        if (this.localConfig.level >= LEVELS['1_FATAL']) this._log('fatal', args, false, extraBoundDatas)
+        if (this.localConfig.level >= LEVELS['1_FATAL']) this._log('fatal', args)
     }
 }
 
