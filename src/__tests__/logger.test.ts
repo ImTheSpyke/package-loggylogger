@@ -736,6 +736,135 @@ describe('Logger', () => {
             logger._instance.setBroadcast(undefined)
             expect(() => logger.info('test')).not.toThrow()
         })
+
+        it('should always broadcast to dashboard regardless of log level', () => {
+            const broadcast = vi.fn()
+            // Set level to FATAL (lowest) - only fatal logs should appear in console
+            const logger = Loggy.createLogger({ level: LEVELS['1_FATAL'] })
+            logger._instance.setBroadcast(broadcast)
+
+            // Call all log methods - console should only get fatal
+            logger.silly('silly msg')
+            logger.verbose('verbose msg')
+            logger.debug('debug msg')
+            logger.log('log msg')
+            logger.info('info msg')
+            logger.success('success msg')
+            logger.warn('warn msg')
+            logger.error('error msg')
+            logger.fatal('fatal msg')
+
+            // Console should only have 1 call (fatal)
+            expect(console.log).toHaveBeenCalledTimes(1)
+
+            // But broadcast should have been called 9 times (all log levels)
+            expect(broadcast).toHaveBeenCalledTimes(9)
+            expect(broadcast).toHaveBeenCalledWith('silly', expect.any(String), expect.any(Date), ['silly msg'], {})
+            expect(broadcast).toHaveBeenCalledWith('verbose', expect.any(String), expect.any(Date), ['verbose msg'], {})
+            expect(broadcast).toHaveBeenCalledWith('debug', expect.any(String), expect.any(Date), ['debug msg'], {})
+            expect(broadcast).toHaveBeenCalledWith('log', expect.any(String), expect.any(Date), ['log msg'], {})
+            expect(broadcast).toHaveBeenCalledWith('info', expect.any(String), expect.any(Date), ['info msg'], {})
+            expect(broadcast).toHaveBeenCalledWith('success', expect.any(String), expect.any(Date), ['success msg'], {})
+            expect(broadcast).toHaveBeenCalledWith('warn', expect.any(String), expect.any(Date), ['warn msg'], {})
+            expect(broadcast).toHaveBeenCalledWith('error', expect.any(String), expect.any(Date), ['error msg'], {})
+            expect(broadcast).toHaveBeenCalledWith('fatal', expect.any(String), expect.any(Date), ['fatal msg'], {})
+        })
+
+        it('should send bound data correctly to dashboard', () => {
+            const broadcast = vi.fn()
+            const logger = Loggy.createLogger({ level: LEVELS['5_INFO'] }, { userId: '123', requestId: 'abc' })
+            logger._instance.setBroadcast(broadcast)
+
+            logger.info('test message')
+
+            expect(broadcast).toHaveBeenCalledWith(
+                'info',
+                expect.any(String),
+                expect.any(Date),
+                ['test message'],
+                { userId: '123', requestId: 'abc' }
+            )
+        })
+
+        it('should send extra bound data from bind() correctly to dashboard', () => {
+            const broadcast = vi.fn()
+            const logger = Loggy.createLogger({ level: LEVELS['5_INFO'] }, { userId: '123' })
+            logger._instance.setBroadcast(broadcast)
+
+            const boundLogger = logger.bind({ sessionId: 'xyz' })
+            boundLogger.info('bound test')
+
+            // bind() merges extra data with existing bound data
+            expect(broadcast).toHaveBeenCalledWith(
+                'info',
+                expect.any(String),
+                expect.any(Date),
+                ['bound test'],
+                { userId: '123', sessionId: 'xyz' }
+            )
+        })
+
+        it('should send chained bound data correctly to dashboard', () => {
+            const broadcast = vi.fn()
+            const logger = Loggy.createLogger({ level: LEVELS['5_INFO'] })
+            logger._instance.setBroadcast(broadcast)
+
+            const bound1 = logger.bind({ a: 1 })
+            const bound2 = bound1.bind({ b: 2 })
+            const bound3 = bound2.bind({ c: 3 })
+
+            bound3.info('chained bound test')
+
+            expect(broadcast).toHaveBeenCalledWith(
+                'info',
+                expect.any(String),
+                expect.any(Date),
+                ['chained bound test'],
+                { a: 1, b: 2, c: 3 }
+            )
+        })
+
+        it('should only broadcast once per log call', () => {
+            const broadcast = vi.fn()
+            const logger = Loggy.createLogger({ level: LEVELS['9_SILLY'] })
+            logger._instance.setBroadcast(broadcast)
+
+            logger.info('single broadcast test')
+
+            // Should only be called exactly once
+            expect(broadcast).toHaveBeenCalledTimes(1)
+        })
+
+        it('should only broadcast once per log call for all log methods', () => {
+            const broadcast = vi.fn()
+            const logger = Loggy.createLogger({ level: LEVELS['9_SILLY'] })
+            logger._instance.setBroadcast(broadcast)
+
+            logger.silly('s')
+            logger.verbose('v')
+            logger.debug('d')
+            logger.log('l')
+            logger.info('i')
+            logger.success('su')
+            logger.warn('w')
+            logger.error('e')
+            logger.fatal('f')
+
+            // Each method should broadcast exactly once = 9 total
+            expect(broadcast).toHaveBeenCalledTimes(9)
+        })
+
+        it('should only broadcast once per bound log call', () => {
+            const broadcast = vi.fn()
+            const logger = Loggy.createLogger({ level: LEVELS['9_SILLY'] })
+            logger._instance.setBroadcast(broadcast)
+
+            const boundLogger = logger.bind({ test: 'data' })
+            boundLogger.info('bound single broadcast')
+
+            // Should only be called exactly once even with bound data
+            expect(broadcast).toHaveBeenCalledTimes(1)
+        })
     })
 
     describe('callLineGetter', () => {
