@@ -88,7 +88,11 @@ export function startServer(port = 11000): DashboardServer {
         clients.forEach(c => { if (c.readyState === WebSocket.OPEN) c.send(msg) })
     }
 
-    server.listen(port)
+    server.listen(port, "127.0.0.1", () => {
+        const address = server.address();
+        const actualPort = typeof address === 'object' && address ? address.port : port;
+        console.warn(`[LoggyLogger] Dashboard server started at http://127.0.0.1:${actualPort}`);
+    })
 
     return {
         server, wss, broadcast,

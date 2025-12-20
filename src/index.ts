@@ -201,6 +201,12 @@ export class LoggyLogger {
     getBasePath() { return this._basePath }
 
     getDashboardServer() { return this._server }
+    getDashboardPort(): string | number | null {
+        if (!this._server) return null
+        const address = this._server.server.address();
+        const actualPort = typeof address === 'object' && address ? address.port : address;
+        return actualPort
+    }
 
     // Dashboard
     startDashboard(port = 11000) {
