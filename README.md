@@ -153,9 +153,15 @@ Loggy.startDashboard()
 // Or specify a custom port
 Loggy.startDashboard(3000)
 
+// Use port 0 to let the OS assign an available port
+Loggy.startDashboard(0)
+const port = Loggy.getDashboardPort() // Retrieve the assigned port
+
 // Stop when done
 Loggy.stopDashboard()
 ```
+
+> ⚠️ **Important security note:** The dashboard is intended for local debugging use only and should not be exposed to public or untrusted networks. It lacks authentication and should and was not designed to be publicly accessible. By default it only listens on 127.0.0.1
 
 ## Production Mode
 
@@ -181,7 +187,7 @@ if(process.env.NODE_ENV == 'production') {
             callLine: false
         },
         // Optionally enable dashboard in production
-        dashboard: false
+        dashboard: false // ⚠️ Warning: enabling dashboard in production may lead to security vulnerabilities if handled incorrectly. Only enable if necessary and ensure proper network security measures are in place.
     }, 11000)  // Optionnal, dashboard port if enabled (default: 11000)
 }
 ```
